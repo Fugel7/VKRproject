@@ -10,7 +10,8 @@ from app.db import get_database_url
 
 
 def deploy_schema(schema_path: Path) -> None:
-    sql = schema_path.read_text(encoding="utf-8")
+    # utf-8-sig strips optional BOM, which otherwise breaks SQL parsing in PostgreSQL
+    sql = schema_path.read_text(encoding="utf-8-sig")
     with connect(get_database_url(), autocommit=True) as conn:
         with conn.cursor() as cur:
             cur.execute(sql)
