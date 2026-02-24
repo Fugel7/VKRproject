@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 const DEMO_PROJECTS = [
   {
@@ -42,31 +42,117 @@ function applyTelegramTheme() {
   });
 }
 
+function toDisplayName(user) {
+  if (!user) return 'Не авторизован';
+  const full = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+  return full || user.username || `ID ${user.id}`;
+}
+
+function toInitials(user) {
+  const name = toDisplayName(user);
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
+  const [authState, setAuthState] = useState({
+    status: 'loading',
+    user: null,
+    source: null,
+    error: null
+  });
 
   useEffect(() => {
-    window.Telegram?.WebApp?.ready?.();
+    const tg = window.Telegram?.WebApp;
+    tg?.ready?.();
     applyTelegramTheme();
 
     const params = new URLSearchParams(window.location.search);
     const incomingProjectKey = params.get('project_key');
-
-    if (!incomingProjectKey) return;
-
-    const projectFromChat = DEMO_PROJECTS.find((item) => item.key === incomingProjectKey);
-    if (projectFromChat) {
-      setSelectedProject(projectFromChat);
+    if (incomingProjectKey) {
+      const projectFromChat = DEMO_PROJECTS.find((item) => item.key === incomingProjectKey);
+      if (projectFromChat) setSelectedProject(projectFromChat);
     }
+
+    async function resolveTelegramUser() {
+      if (!tg) {
+        setAuthState({
+          status: 'anonymous',
+          user: null,
+          source: null,
+          error: 'Откройте приложение внутри Telegram для авторизации.'
+        });
+        return;
+      }
+
+      const unsafeUser = tg.initDataUnsafe?.user ?? null;
+      if (!tg.initData) {
+        setAuthState({
+          status: unsafeUser ? 'ready' : 'anonymous',
+          user: unsafeUser,
+          source: unsafeUser ? 'telegram_unsafe' : null,
+          error: unsafeUser ? null : 'Telegram initData не получен.'
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/auth/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ init_data: tg.initData })
+        });
+        if (!response.ok) throw new Error(`Auth failed ${response.status}`);
+
+        const data = await response.json();
+        setAuthState({
+          status: 'ready',
+          user: data.user,
+          source: 'telegram_verified',
+          error: null
+        });
+      } catch (_error) {
+        setAuthState({
+          status: unsafeUser ? 'ready' : 'error',
+          user: unsafeUser,
+          source: unsafeUser ? 'telegram_unsafe' : null,
+          error: 'Не удалось подтвердить Telegram подпись на бэке.'
+        });
+      }
+    }
+
+    resolveTelegramUser();
   }, []);
 
   const visibleProjects = useMemo(() => {
     if (!query.trim()) return DEMO_PROJECTS;
-
     const lowered = query.toLowerCase();
     return DEMO_PROJECTS.filter((project) => project.title.toLowerCase().includes(lowered));
   }, [query]);
+
+  function openProfile() {
+    if (!authState.user) return;
+    const tg = window.Telegram?.WebApp;
+
+    if (authState.user.username) {
+      const link = `https://t.me/${authState.user.username}`;
+      if (tg?.openTelegramLink) tg.openTelegramLink(link);
+      else window.open(link, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (authState.user.id) {
+      const link = `tg://user?id=${authState.user.id}`;
+      if (tg?.openLink) tg.openLink(link);
+      else window.open(link, '_blank', 'noopener,noreferrer');
+    }
+  }
 
   if (selectedProject) {
     return (
@@ -99,6 +185,24 @@ export default function App() {
         </p>
       </div>
 
+      <button className="profile-banner" type="button" onClick={openProfile} disabled={!authState.user}>
+        {authState.user?.photo_url ? (
+          <img className="profile-avatar" src={authState.user.photo_url} alt={toDisplayName(authState.user)} />
+        ) : (
+          <span className="profile-avatar profile-avatar-fallback">{toInitials(authState.user)}</span>
+        )}
+        <span className="profile-info">
+          <strong>{toDisplayName(authState.user)}</strong>
+          <span>
+            {authState.status === 'loading' && 'Проверяем Telegram авторизацию...'}
+            {authState.status !== 'loading' &&
+              (authState.source === 'telegram_verified' ? 'Telegram: подтверждено' : 'Telegram: без проверки подписи')}
+          </span>
+        </span>
+      </button>
+
+      {authState.error && <p className="auth-hint">{authState.error}</p>}
+
       <input
         className="search"
         type="search"
@@ -128,4 +232,3 @@ export default function App() {
     </main>
   );
 }
-
