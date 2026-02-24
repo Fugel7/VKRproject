@@ -8,6 +8,9 @@ from urllib.parse import parse_qsl
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from psycopg import connect
+from psycopg.rows import dict_row
+from psycopg.errors import Error as PsycopgError
 
 
 app = FastAPI(title="VKR Backend", version="0.1.0")
@@ -54,6 +57,69 @@ def verify_telegram_init_data(init_data: str, bot_token: str) -> dict:
     return json.loads(user_raw)
 
 
+def save_or_update_user(telegram_user: dict) -> dict:
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise HTTPException(status_code=503, detail="DATABASE_URL is not configured")
+
+    tg_id = telegram_user.get("id")
+    if tg_id is None:
+        raise HTTPException(status_code=400, detail="Telegram user id is missing")
+
+    try:
+        with connect(database_url) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(
+                    """
+                    INSERT INTO users (tg_id, username, first_name, last_name, photo_url, last_login_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (tg_id)
+                    DO UPDATE SET
+                        username = EXCLUDED.username,
+                        first_name = EXCLUDED.first_name,
+                        last_name = EXCLUDED.last_name,
+                        photo_url = EXCLUDED.photo_url,
+                        last_login_at = NOW()
+                    RETURNING id, tg_id, username, first_name, last_name, photo_url, created_at, last_login_at;
+                    """,
+                    (
+                        tg_id,
+                        telegram_user.get("username"),
+                        telegram_user.get("first_name") or "",
+                        telegram_user.get("last_name"),
+                        telegram_user.get("photo_url"),
+                    ),
+                )
+                user_row = cur.fetchone()
+            conn.commit()
+    except PsycopgError:
+        raise HTTPException(status_code=500, detail="Database error while saving user")
+
+    return user_row
+
+
+def get_user_by_tg_id(tg_id: int) -> dict | None:
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise HTTPException(status_code=503, detail="DATABASE_URL is not configured")
+
+    try:
+        with connect(database_url) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(
+                    """
+                    SELECT id, tg_id, username, first_name, last_name, photo_url, created_at, last_login_at
+                    FROM users
+                    WHERE tg_id = %s
+                    LIMIT 1;
+                    """,
+                    (tg_id,),
+                )
+                return cur.fetchone()
+    except PsycopgError:
+        raise HTTPException(status_code=500, detail="Database error while loading user")
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -67,6 +133,14 @@ def root() -> dict:
     }
 
 
+@app.get("/me")
+def me(tg_id: int) -> dict:
+    user = get_user_by_tg_id(tg_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"ok": True, "user": user}
+
+
 @app.post("/auth/telegram")
 def auth_telegram(payload: TelegramAuthRequest) -> dict:
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -74,4 +148,5 @@ def auth_telegram(payload: TelegramAuthRequest) -> dict:
         raise HTTPException(status_code=503, detail="TELEGRAM_BOT_TOKEN is not configured")
 
     user = verify_telegram_init_data(payload.init_data, bot_token)
-    return {"ok": True, "user": user}
+    db_user = save_or_update_user(user)
+    return {"ok": True, "user": user, "db_user": db_user}

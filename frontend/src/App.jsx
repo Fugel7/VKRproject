@@ -58,6 +58,14 @@ function toInitials(user) {
     .join('');
 }
 
+function getApiBase() {
+  const { hostname, port } = window.location;
+  if (port === '5173' && (hostname === '127.0.0.1' || hostname === 'localhost')) {
+    return 'http://127.0.0.1:8000';
+  }
+  return '/api';
+}
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
@@ -81,6 +89,8 @@ export default function App() {
     }
 
     async function resolveTelegramUser() {
+      const apiBase = getApiBase();
+
       if (!tg) {
         setAuthState({
           status: 'anonymous',
@@ -103,7 +113,7 @@ export default function App() {
       }
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/auth/telegram', {
+        const response = await fetch(`${apiBase}/auth/telegram`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ init_data: tg.initData })
@@ -111,10 +121,13 @@ export default function App() {
         if (!response.ok) throw new Error(`Auth failed ${response.status}`);
 
         const data = await response.json();
+        const dbUser = data?.db_user;
+        if (!dbUser) throw new Error('Missing db_user after auth');
+
         setAuthState({
           status: 'ready',
-          user: data.user,
-          source: 'telegram_verified',
+          user: dbUser,
+          source: 'telegram_verified_db',
           error: null
         });
       } catch (_error) {
@@ -148,7 +161,8 @@ export default function App() {
     }
 
     if (authState.user.id) {
-      const link = `tg://user?id=${authState.user.id}`;
+      const telegramId = authState.user.tg_id ?? authState.user.id;
+      const link = `tg://user?id=${telegramId}`;
       if (tg?.openLink) tg.openLink(link);
       else window.open(link, '_blank', 'noopener,noreferrer');
     }
@@ -196,7 +210,9 @@ export default function App() {
           <span>
             {authState.status === 'loading' && 'Проверяем Telegram авторизацию...'}
             {authState.status !== 'loading' &&
-              (authState.source === 'telegram_verified' ? 'Telegram: подтверждено' : 'Telegram: без проверки подписи')}
+              (authState.source === 'telegram_verified' || authState.source === 'telegram_verified_db'
+                ? 'Telegram: подтверждено'
+                : 'Telegram: без проверки подписи')}
           </span>
         </span>
       </button>
