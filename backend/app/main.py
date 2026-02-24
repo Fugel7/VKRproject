@@ -9,8 +9,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from psycopg import connect
-from psycopg.rows import dict_row
 from psycopg.errors import Error as PsycopgError
+from psycopg.rows import dict_row
+
+from app.db import get_database_url
 
 
 app = FastAPI(title="VKR Backend", version="0.1.0")
@@ -58,16 +60,12 @@ def verify_telegram_init_data(init_data: str, bot_token: str) -> dict:
 
 
 def save_or_update_user(telegram_user: dict) -> dict:
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise HTTPException(status_code=503, detail="DATABASE_URL is not configured")
-
     tg_id = telegram_user.get("id")
     if tg_id is None:
         raise HTTPException(status_code=400, detail="Telegram user id is missing")
 
     try:
-        with connect(database_url) as conn:
+        with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     """
@@ -92,6 +90,8 @@ def save_or_update_user(telegram_user: dict) -> dict:
                 )
                 user_row = cur.fetchone()
             conn.commit()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except PsycopgError:
         raise HTTPException(status_code=500, detail="Database error while saving user")
 
@@ -99,12 +99,8 @@ def save_or_update_user(telegram_user: dict) -> dict:
 
 
 def get_user_by_tg_id(tg_id: int) -> dict | None:
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise HTTPException(status_code=503, detail="DATABASE_URL is not configured")
-
     try:
-        with connect(database_url) as conn:
+        with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     """
@@ -116,6 +112,8 @@ def get_user_by_tg_id(tg_id: int) -> dict | None:
                     (tg_id,),
                 )
                 return cur.fetchone()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
     except PsycopgError:
         raise HTTPException(status_code=500, detail="Database error while loading user")
 

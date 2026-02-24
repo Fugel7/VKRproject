@@ -4,9 +4,9 @@ services:
     container_name: vkr_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-vkr_db}
-      POSTGRES_USER: ${POSTGRES_USER:-vkr_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vkr_pass}
+      POSTGRES_DB: ${POSTGRES_POSTGRES_DB:-vkr_db}
+      POSTGRES_USER: ${POSTGRES_POSTGRES_USER:-vkr_user}
+      POSTGRES_PASSWORD: ${POSTGRES_POSTGRES_PASSWORD:-vkr_pass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
@@ -20,7 +20,7 @@ services:
     container_name: vkr_backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-vkr_user}:${POSTGRES_PASSWORD:-vkr_pass}@postgres:5432/${POSTGRES_DB:-vkr_db}
+      DATABASE_URL: postgresql://${POSTGRES_POSTGRES_USER:-vkr_user}:${POSTGRES_POSTGRES_PASSWORD:-vkr_pass}@postgres:5432/${POSTGRES_POSTGRES_DB:-vkr_db}
       APP_ENV: production
     depends_on:
       - postgres
