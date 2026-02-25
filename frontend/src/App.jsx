@@ -1,28 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-const DEMO_PROJECTS = [
-  {
-    id: 1,
-    key: 'f9f8c0fd-1775-44f2-8f56-53e24d655601',
-    title: 'Разработка Telegram Mini App',
-    type: 'Группа',
-    role: 'OWNER'
-  },
-  {
-    id: 2,
-    key: 'b6fbe95d-37f3-4341-98e7-9f8cd8e5fdad',
-    title: 'Личный проект: Дизайн и контент',
-    type: 'Личный',
-    role: 'MEMBER'
-  },
-  {
-    id: 3,
-    key: '355386db-a91b-41d4-8e7b-f6d394b0e728',
-    title: 'QA и приёмка MVP',
-    type: 'Группа',
-    role: 'EXECUTOR'
-  }
-];
+const DEMO_PROJECTS = [];
 
 function applyTelegramTheme() {
   const tg = window.Telegram?.WebApp;
@@ -118,7 +96,16 @@ export default function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ init_data: tg.initData })
         });
-        if (!response.ok) throw new Error(`Auth failed ${response.status}`);
+        if (!response.ok) {
+          let details = `Auth failed ${response.status}`;
+          try {
+            const errorPayload = await response.json();
+            if (errorPayload?.detail) details = `${response.status}: ${errorPayload.detail}`;
+          } catch {
+            // ignore JSON parse errors and keep status text
+          }
+          throw new Error(details);
+        }
 
         const data = await response.json();
         const dbUser = data?.db_user;
@@ -130,12 +117,12 @@ export default function App() {
           source: 'telegram_verified_db',
           error: null
         });
-      } catch (_error) {
+      } catch (error) {
         setAuthState({
           status: unsafeUser ? 'ready' : 'error',
           user: unsafeUser,
           source: unsafeUser ? 'telegram_unsafe' : null,
-          error: 'Не удалось подтвердить Telegram подпись на бэке.'
+          error: ('�� ������� ����������� Telegram ������� �� ����. ' + (error?.message ?? '')).trim()
         });
       }
     }
@@ -248,3 +235,4 @@ export default function App() {
     </main>
   );
 }
+

@@ -92,8 +92,8 @@ def save_or_update_user(telegram_user: dict) -> dict:
             conn.commit()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
-    except PsycopgError:
-        raise HTTPException(status_code=500, detail="Database error while saving user")
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while saving user: {exc}")
 
     return user_row
 
@@ -114,8 +114,8 @@ def get_user_by_tg_id(tg_id: int) -> dict | None:
                 return cur.fetchone()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
-    except PsycopgError:
-        raise HTTPException(status_code=500, detail="Database error while loading user")
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while loading user: {exc}")
 
 
 @app.get("/health")
