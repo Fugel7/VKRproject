@@ -118,6 +118,33 @@ def get_user_by_tg_id(tg_id: int) -> dict | None:
         raise HTTPException(status_code=500, detail=f"Database error while loading user: {exc}")
 
 
+def get_projects_by_tg_id(tg_id: int) -> list[dict]:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        p.id,
+                        p.project_key,
+                        p.title,
+                        p.tg_chat_id,
+                        pm.role
+                    FROM users u
+                    JOIN project_members pm ON pm.user_id = u.id AND pm.is_active = TRUE
+                    JOIN projects p ON p.id = pm.project_id
+                    WHERE u.tg_id = %s
+                    ORDER BY p.created_at DESC, p.id DESC;
+                    """,
+                    (tg_id,),
+                )
+                return cur.fetchall()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while loading projects: {exc}")
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -137,6 +164,11 @@ def me(tg_id: int) -> dict:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return {"ok": True, "user": user}
+
+
+@app.get("/projects")
+def projects(tg_id: int) -> dict:
+    return {"ok": True, "projects": get_projects_by_tg_id(tg_id)}
 
 
 @app.post("/auth/telegram")
