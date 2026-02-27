@@ -268,7 +268,7 @@ export default function App() {
     <main className="app">
       <div className="screen-header">
         <h1 className="screen-title">Выбор проекта</h1>
-        <p className="screen-subtitle">Ваши проекты, полученные из базы данных.</p>
+        <p className="screen-subtitle">Выберите проект для работы.</p>
       </div>
 
       <button className="profile-banner" type="button" onClick={openProfile} disabled={!authState.user}>
@@ -311,24 +311,17 @@ export default function App() {
               <h3>{project.title}</h3>
 
               <div className="meta">
-                {project.tg_chat_id ? <span className="badge">Чат: {project.tg_chat_id}</span> : null}
-                <span className="badge badge-role">Роль: {project.role}</span>
-              </div>
-
-              <div className="meta">
                 <button className="open-btn" onClick={() => setSelectedProject(project)}>
                   Открыть проект
                 </button>
-                {project.role === 'OWNER' && (
-                  <button
-                    className="back-btn"
-                    type="button"
-                    onClick={() => deleteProject(project)}
-                    disabled={deletingProjectId === project.id}
-                  >
-                    {deletingProjectId === project.id ? 'Удаляем...' : 'Удалить проект'}
-                  </button>
-                )}
+                <button
+                  className="back-btn"
+                  type="button"
+                  onClick={() => deleteProject(project)}
+                  disabled={deletingProjectId === project.id}
+                >
+                  {deletingProjectId === project.id ? 'Удаляем...' : 'Удалить проект'}
+                </button>
               </div>
             </article>
           ))}

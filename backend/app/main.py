@@ -155,8 +155,7 @@ def get_projects_by_tg_id(tg_id: int) -> list[dict]:
                         p.title,
                         p.tg_chat_id,
                         p.tg_chat_instance,
-                        p.tg_chat_type,
-                        pm.role
+                        p.tg_chat_type
                     FROM users u
                     JOIN project_members pm ON pm.user_id = u.id AND pm.is_active = TRUE
                     JOIN projects p ON p.id = pm.project_id
@@ -191,7 +190,7 @@ def delete_project_by_tg_id(project_id: int, tg_id: int) -> dict:
 
                 cur.execute(
                     """
-                    SELECT pm.role
+                    SELECT 1
                     FROM project_members pm
                     WHERE pm.project_id = %s
                       AND pm.user_id = %s
@@ -203,8 +202,6 @@ def delete_project_by_tg_id(project_id: int, tg_id: int) -> dict:
                 membership = cur.fetchone()
                 if not membership:
                     raise HTTPException(status_code=404, detail="Project not found in user scope")
-                if membership["role"] != "OWNER":
-                    raise HTTPException(status_code=403, detail="Only project owner can delete project")
 
                 cur.execute(
                     """
@@ -334,29 +331,15 @@ def ensure_project_member_by_start_param(start_param: str | None, user_id: int) 
 
                 cur.execute(
                     """
-                    SELECT EXISTS(
-                        SELECT 1
-                        FROM project_members
-                        WHERE project_id = %s AND is_active = TRUE
-                    ) AS has_members;
-                    """,
-                    (project["id"],),
-                )
-                has_members_row = cur.fetchone()
-                has_members = bool(has_members_row["has_members"]) if has_members_row else False
-                default_role = "OWNER" if not has_members else "MEMBER"
-
-                cur.execute(
-                    """
                     INSERT INTO project_members (project_id, user_id, role, is_active)
                     VALUES (%s, %s, %s, TRUE)
                     ON CONFLICT (project_id, user_id)
                     DO UPDATE SET is_active = TRUE
-                    RETURNING role;
+                    RETURNING project_id;
                     """,
-                    (project["id"], user_id, default_role),
+                    (project["id"], user_id, "MEMBER"),
                 )
-                member_row = cur.fetchone()
+                cur.fetchone()
             conn.commit()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -370,7 +353,6 @@ def ensure_project_member_by_start_param(start_param: str | None, user_id: int) 
         "tg_chat_id": project["tg_chat_id"],
         "tg_chat_instance": project["tg_chat_instance"],
         "tg_chat_type": project["tg_chat_type"],
-        "role": member_row["role"] if member_row else None,
     }
 
 
@@ -423,8 +405,7 @@ def ensure_chat_project_for_user(auth_context: dict, user_id: int) -> dict | Non
                     )
                     project = cur.fetchone()
 
-                is_new_project = project is None
-                if is_new_project:
+                if project is None:
                     cur.execute(
                         """
                         INSERT INTO projects (tg_chat_id, tg_chat_instance, tg_chat_type, title)
@@ -450,18 +431,17 @@ def ensure_chat_project_for_user(auth_context: dict, user_id: int) -> dict | Non
                     )
                     project = cur.fetchone()
 
-                default_role = "OWNER" if is_new_project else "MEMBER"
                 cur.execute(
                     """
                     INSERT INTO project_members (project_id, user_id, role, is_active)
                     VALUES (%s, %s, %s, TRUE)
                     ON CONFLICT (project_id, user_id)
                     DO UPDATE SET is_active = TRUE
-                    RETURNING role;
+                    RETURNING project_id;
                     """,
-                    (project["id"], user_id, default_role),
+                    (project["id"], user_id, "MEMBER"),
                 )
-                member_row = cur.fetchone()
+                cur.fetchone()
 
             conn.commit()
     except RuntimeError as exc:
@@ -476,7 +456,6 @@ def ensure_chat_project_for_user(auth_context: dict, user_id: int) -> dict | Non
         "tg_chat_id": project["tg_chat_id"],
         "tg_chat_instance": project["tg_chat_instance"],
         "tg_chat_type": project["tg_chat_type"],
-        "role": member_row["role"] if member_row else None,
     }
 
 

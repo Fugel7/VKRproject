@@ -187,6 +187,10 @@ body {
   margin-bottom: 12px;
 }
 
+.meta .back-btn {
+  margin-bottom: 0;
+}
+
 .empty {
   padding: 24px 12px;
   color: var(--muted);
