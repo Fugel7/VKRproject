@@ -56,7 +56,21 @@ def verify_telegram_init_data(init_data: str, bot_token: str) -> dict:
     if not user_raw:
         raise HTTPException(status_code=400, detail="Missing Telegram user data")
 
-    return json.loads(user_raw)
+    user = json.loads(user_raw)
+    context = {
+        "chat_instance": pairs.get("chat_instance"),
+        "chat_type": pairs.get("chat_type"),
+        "start_param": pairs.get("start_param"),
+    }
+
+    chat_raw = pairs.get("chat")
+    if chat_raw:
+        try:
+            context["chat"] = json.loads(chat_raw)
+        except json.JSONDecodeError:
+            context["chat"] = None
+
+    return {"user": user, "context": context}
 
 
 def save_or_update_user(telegram_user: dict) -> dict:
@@ -129,6 +143,8 @@ def get_projects_by_tg_id(tg_id: int) -> list[dict]:
                         p.project_key,
                         p.title,
                         p.tg_chat_id,
+                        p.tg_chat_instance,
+                        p.tg_chat_type,
                         pm.role
                     FROM users u
                     JOIN project_members pm ON pm.user_id = u.id AND pm.is_active = TRUE
@@ -143,6 +159,131 @@ def get_projects_by_tg_id(tg_id: int) -> list[dict]:
         raise HTTPException(status_code=503, detail=str(exc))
     except PsycopgError as exc:
         raise HTTPException(status_code=500, detail=f"Database error while loading projects: {exc}")
+
+
+def ensure_projects_chat_columns(cur) -> None:
+    cur.execute("ALTER TABLE projects ADD COLUMN IF NOT EXISTS tg_chat_instance TEXT;")
+    cur.execute("ALTER TABLE projects ADD COLUMN IF NOT EXISTS tg_chat_type TEXT;")
+    cur.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_projects_tg_chat_id_not_null
+          ON projects(tg_chat_id)
+          WHERE tg_chat_id IS NOT NULL;
+        """
+    )
+    cur.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_projects_tg_chat_instance_not_null
+          ON projects(tg_chat_instance)
+          WHERE tg_chat_instance IS NOT NULL;
+        """
+    )
+
+
+def ensure_chat_project_for_user(auth_context: dict, user_id: int) -> dict | None:
+    chat = auth_context.get("chat") if isinstance(auth_context.get("chat"), dict) else None
+    raw_tg_chat_id = chat.get("id") if chat else None
+    chat_instance = auth_context.get("chat_instance")
+    chat_type = auth_context.get("chat_type") or (chat.get("type") if chat else None)
+    chat_title = chat.get("title") if chat else None
+
+    tg_chat_id = None
+    if raw_tg_chat_id is not None:
+        try:
+            tg_chat_id = int(raw_tg_chat_id)
+        except (TypeError, ValueError):
+            tg_chat_id = None
+
+    if tg_chat_id is None and not chat_instance:
+        return None
+
+    title = (chat_title or "Новый проект").strip() or "Новый проект"
+
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_projects_chat_columns(cur)
+
+                project = None
+                if tg_chat_id is not None:
+                    cur.execute(
+                        """
+                        SELECT id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type
+                        FROM projects
+                        WHERE tg_chat_id = %s
+                        LIMIT 1;
+                        """,
+                        (tg_chat_id,),
+                    )
+                    project = cur.fetchone()
+
+                if not project and chat_instance:
+                    cur.execute(
+                        """
+                        SELECT id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type
+                        FROM projects
+                        WHERE tg_chat_instance = %s
+                        LIMIT 1;
+                        """,
+                        (chat_instance,),
+                    )
+                    project = cur.fetchone()
+
+                is_new_project = project is None
+                if is_new_project:
+                    cur.execute(
+                        """
+                        INSERT INTO projects (tg_chat_id, tg_chat_instance, tg_chat_type, title)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type;
+                        """,
+                        (tg_chat_id, chat_instance, chat_type, title),
+                    )
+                    project = cur.fetchone()
+                else:
+                    cur.execute(
+                        """
+                        UPDATE projects
+                        SET
+                            title = %s,
+                            tg_chat_id = COALESCE(tg_chat_id, %s),
+                            tg_chat_instance = COALESCE(tg_chat_instance, %s),
+                            tg_chat_type = COALESCE(%s, tg_chat_type)
+                        WHERE id = %s
+                        RETURNING id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type;
+                        """,
+                        (title, tg_chat_id, chat_instance, chat_type, project["id"]),
+                    )
+                    project = cur.fetchone()
+
+                default_role = "OWNER" if is_new_project else "MEMBER"
+                cur.execute(
+                    """
+                    INSERT INTO project_members (project_id, user_id, role, is_active)
+                    VALUES (%s, %s, %s, TRUE)
+                    ON CONFLICT (project_id, user_id)
+                    DO UPDATE SET is_active = TRUE
+                    RETURNING role;
+                    """,
+                    (project["id"], user_id, default_role),
+                )
+                member_row = cur.fetchone()
+
+            conn.commit()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while ensuring chat project: {exc}")
+
+    return {
+        "id": project["id"],
+        "project_key": project["project_key"],
+        "title": project["title"],
+        "tg_chat_id": project["tg_chat_id"],
+        "tg_chat_instance": project["tg_chat_instance"],
+        "tg_chat_type": project["tg_chat_type"],
+        "role": member_row["role"] if member_row else None,
+    }
 
 
 @app.get("/health")
@@ -177,6 +318,15 @@ def auth_telegram(payload: TelegramAuthRequest) -> dict:
     if not bot_token:
         raise HTTPException(status_code=503, detail="TELEGRAM_BOT_TOKEN is not configured")
 
-    user = verify_telegram_init_data(payload.init_data, bot_token)
+    verified = verify_telegram_init_data(payload.init_data, bot_token)
+    user = verified["user"]
+    context = verified["context"]
     db_user = save_or_update_user(user)
-    return {"ok": True, "user": user, "db_user": db_user}
+    active_project = ensure_chat_project_for_user(context, db_user["id"])
+    return {
+        "ok": True,
+        "user": user,
+        "db_user": db_user,
+        "active_project": active_project,
+        "launched_from_chat": active_project is not None,
+    }

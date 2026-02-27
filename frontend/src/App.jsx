@@ -64,7 +64,7 @@ export default function App() {
     tg?.ready?.();
     applyTelegramTheme();
 
-    async function loadProjects(apiBase, tgId) {
+    async function loadProjects(apiBase, tgId, activeProject) {
       setProjectsLoading(true);
       setProjectsError(null);
       try {
@@ -84,11 +84,17 @@ export default function App() {
         const list = Array.isArray(data?.projects) ? data.projects : [];
         setProjects(list);
 
-        const params = new URLSearchParams(window.location.search);
-        const incomingProjectKey = params.get('project_key');
-        if (incomingProjectKey) {
-          const found = list.find((item) => item.project_key === incomingProjectKey);
-          if (found) setSelectedProject(found);
+        if (activeProject) {
+          const foundById = list.find((item) => item.id === activeProject.id);
+          const foundByKey = list.find((item) => item.project_key === activeProject.project_key);
+          setSelectedProject(foundById || foundByKey || activeProject);
+        } else {
+          const params = new URLSearchParams(window.location.search);
+          const incomingProjectKey = params.get('project_key');
+          if (incomingProjectKey) {
+            const found = list.find((item) => item.project_key === incomingProjectKey);
+            if (found) setSelectedProject(found);
+          }
         }
       } catch (error) {
         setProjects([]);
@@ -143,6 +149,7 @@ export default function App() {
         const data = await response.json();
         const dbUser = data?.db_user;
         if (!dbUser) throw new Error('Missing db_user after auth');
+        const activeProject = data?.active_project ?? null;
 
         setAuthState({
           status: 'ready',
@@ -151,7 +158,7 @@ export default function App() {
           error: null
         });
 
-        await loadProjects(apiBase, dbUser.tg_id);
+        await loadProjects(apiBase, dbUser.tg_id, activeProject);
       } catch (error) {
         setAuthState({
           status: unsafeUser ? 'ready' : 'error',

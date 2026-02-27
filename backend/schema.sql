@@ -29,10 +29,20 @@ CREATE TABLE users (
 CREATE TABLE projects (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   tg_chat_id BIGINT,
+  tg_chat_instance TEXT,
+  tg_chat_type TEXT,
   project_key UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX ux_projects_tg_chat_id_not_null
+  ON projects(tg_chat_id)
+  WHERE tg_chat_id IS NOT NULL;
+
+CREATE UNIQUE INDEX ux_projects_tg_chat_instance_not_null
+  ON projects(tg_chat_instance)
+  WHERE tg_chat_instance IS NOT NULL;
 
 CREATE TABLE project_members (
   project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
