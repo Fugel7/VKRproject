@@ -30,6 +30,9 @@ app.add_middleware(
 
 class TelegramAuthRequest(BaseModel):
     init_data: str
+    unsafe_chat_id: int | None = None
+    unsafe_chat_type: str | None = None
+    unsafe_chat_title: str | None = None
 
 
 def verify_telegram_init_data(init_data: str, bot_token: str) -> dict:
@@ -159,6 +162,62 @@ def get_projects_by_tg_id(tg_id: int) -> list[dict]:
         raise HTTPException(status_code=503, detail=str(exc))
     except PsycopgError as exc:
         raise HTTPException(status_code=500, detail=f"Database error while loading projects: {exc}")
+
+
+def delete_project_by_tg_id(project_id: int, tg_id: int) -> dict:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(
+                    """
+                    SELECT u.id AS user_id
+                    FROM users u
+                    WHERE u.tg_id = %s
+                    LIMIT 1;
+                    """,
+                    (tg_id,),
+                )
+                user_row = cur.fetchone()
+                if not user_row:
+                    raise HTTPException(status_code=404, detail="User not found")
+
+                cur.execute(
+                    """
+                    SELECT pm.role
+                    FROM project_members pm
+                    WHERE pm.project_id = %s
+                      AND pm.user_id = %s
+                      AND pm.is_active = TRUE
+                    LIMIT 1;
+                    """,
+                    (project_id, user_row["user_id"]),
+                )
+                membership = cur.fetchone()
+                if not membership:
+                    raise HTTPException(status_code=404, detail="Project not found in user scope")
+                if membership["role"] != "OWNER":
+                    raise HTTPException(status_code=403, detail="Only project owner can delete project")
+
+                cur.execute(
+                    """
+                    DELETE FROM projects
+                    WHERE id = %s
+                    RETURNING id;
+                    """,
+                    (project_id,),
+                )
+                deleted = cur.fetchone()
+                if not deleted:
+                    raise HTTPException(status_code=404, detail="Project not found")
+
+            conn.commit()
+            return {"id": deleted["id"]}
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while deleting project: {exc}")
 
 
 def ensure_projects_chat_columns(cur) -> None:
@@ -321,6 +380,18 @@ def auth_telegram(payload: TelegramAuthRequest) -> dict:
     verified = verify_telegram_init_data(payload.init_data, bot_token)
     user = verified["user"]
     context = verified["context"]
+    # Fallback: Telegram may omit chat fields in signed init_data for some launch paths.
+    # Backfill missing metadata from WebApp unsafe fields.
+    existing_chat = context.get("chat") if isinstance(context.get("chat"), dict) else {}
+    fallback_chat = {
+        "id": existing_chat.get("id") if existing_chat.get("id") is not None else payload.unsafe_chat_id,
+        "type": existing_chat.get("type") or payload.unsafe_chat_type or context.get("chat_type"),
+        "title": existing_chat.get("title") or payload.unsafe_chat_title,
+    }
+    if any(value is not None for value in fallback_chat.values()):
+        context["chat"] = fallback_chat
+    if not context.get("chat_type") and payload.unsafe_chat_type:
+        context["chat_type"] = payload.unsafe_chat_type
     db_user = save_or_update_user(user)
     active_project = ensure_chat_project_for_user(context, db_user["id"])
     return {
@@ -330,3 +401,9 @@ def auth_telegram(payload: TelegramAuthRequest) -> dict:
         "active_project": active_project,
         "launched_from_chat": active_project is not None,
     }
+
+
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: int, tg_id: int) -> dict:
+    deleted = delete_project_by_tg_id(project_id, tg_id)
+    return {"ok": True, "deleted_project_id": deleted["id"]}

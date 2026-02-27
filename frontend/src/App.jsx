@@ -52,6 +52,7 @@ export default function App() {
   const [projects, setProjects] = useState([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [projectsError, setProjectsError] = useState(null);
+  const [deletingProjectId, setDeletingProjectId] = useState(null);
   const [authState, setAuthState] = useState({
     status: 'loading',
     user: null,
@@ -129,10 +130,16 @@ export default function App() {
       }
 
       try {
+        const unsafeChat = tg.initDataUnsafe?.chat ?? null;
         const response = await fetch(`${apiBase}/auth/telegram`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ init_data: tg.initData })
+          body: JSON.stringify({
+            init_data: tg.initData,
+            unsafe_chat_id: unsafeChat?.id ?? null,
+            unsafe_chat_type: unsafeChat?.type ?? null,
+            unsafe_chat_title: unsafeChat?.title ?? null
+          })
         });
 
         if (!response.ok) {
@@ -178,6 +185,42 @@ export default function App() {
     const lowered = query.toLowerCase();
     return projects.filter((project) => project.title.toLowerCase().includes(lowered));
   }, [projects, query]);
+
+  async function deleteProject(project) {
+    if (!project?.id || !authState.user?.tg_id) return;
+
+    const confirmed = window.confirm(`Удалить проект "${project.title}"?`);
+    if (!confirmed) return;
+
+    try {
+      setDeletingProjectId(project.id);
+      setProjectsError(null);
+
+      const apiBase = getApiBase();
+      const response = await fetch(
+        `${apiBase}/projects/${encodeURIComponent(project.id)}?tg_id=${encodeURIComponent(authState.user.tg_id)}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) {
+        let details = `Delete failed ${response.status}`;
+        try {
+          const payload = await response.json();
+          if (payload?.detail) details = `${response.status}: ${payload.detail}`;
+        } catch {
+          // keep default details
+        }
+        throw new Error(details);
+      }
+
+      setProjects((prev) => prev.filter((item) => item.id !== project.id));
+      setSelectedProject((prev) => (prev?.id === project.id ? null : prev));
+    } catch (error) {
+      setProjectsError(`Не удалось удалить проект. ${error?.message ?? ''}`.trim());
+    } finally {
+      setDeletingProjectId(null);
+    }
+  }
 
   function openProfile() {
     if (!authState.user) return;
@@ -269,9 +312,21 @@ export default function App() {
                 <span className="badge badge-role">Роль: {project.role}</span>
               </div>
 
-              <button className="open-btn" onClick={() => setSelectedProject(project)}>
-                Открыть проект
-              </button>
+              <div className="meta">
+                <button className="open-btn" onClick={() => setSelectedProject(project)}>
+                  Открыть проект
+                </button>
+                {project.role === 'OWNER' && (
+                  <button
+                    className="back-btn"
+                    type="button"
+                    onClick={() => deleteProject(project)}
+                    disabled={deletingProjectId === project.id}
+                  >
+                    {deletingProjectId === project.id ? 'Удаляем...' : 'Удалить проект'}
+                  </button>
+                )}
+              </div>
             </article>
           ))}
       </section>
