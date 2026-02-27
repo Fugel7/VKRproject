@@ -249,6 +249,7 @@ def ensure_projects_chat_columns(cur) -> None:
 
 def ensure_chat_project(chat_id: int, chat_type: str | None, title: str | None) -> dict:
     normalized_title = (title or "Новый проект").strip() or "Новый проект"
+    chat_instance = str(chat_id)
     try:
         with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
@@ -266,11 +267,22 @@ def ensure_chat_project(chat_id: int, chat_type: str | None, title: str | None) 
                 if not project:
                     cur.execute(
                         """
-                        INSERT INTO projects (tg_chat_id, tg_chat_type, title)
-                        VALUES (%s, %s, %s)
+                        SELECT id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type
+                        FROM projects
+                        WHERE tg_chat_instance = %s
+                        LIMIT 1;
+                        """,
+                        (chat_instance,),
+                    )
+                    project = cur.fetchone()
+                if not project:
+                    cur.execute(
+                        """
+                        INSERT INTO projects (tg_chat_id, tg_chat_instance, tg_chat_type, title)
+                        VALUES (%s, %s, %s, %s)
                         RETURNING id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type;
                         """,
-                        (chat_id, chat_type, normalized_title),
+                        (chat_id, chat_instance, chat_type, normalized_title),
                     )
                     project = cur.fetchone()
                 else:
@@ -279,11 +291,13 @@ def ensure_chat_project(chat_id: int, chat_type: str | None, title: str | None) 
                         UPDATE projects
                         SET
                             title = %s,
+                            tg_chat_id = COALESCE(tg_chat_id, %s),
+                            tg_chat_instance = COALESCE(tg_chat_instance, %s),
                             tg_chat_type = COALESCE(%s, tg_chat_type)
                         WHERE id = %s
                         RETURNING id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type;
                         """,
-                        (normalized_title, chat_type, project["id"]),
+                        (normalized_title, chat_id, chat_instance, chat_type, project["id"]),
                     )
                     project = cur.fetchone()
             conn.commit()
