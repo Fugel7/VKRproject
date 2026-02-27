@@ -3,9 +3,10 @@ import hmac
 import json
 import os
 import time
+import uuid
 from urllib.parse import parse_qsl
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from psycopg import connect
@@ -33,6 +34,12 @@ class TelegramAuthRequest(BaseModel):
     unsafe_chat_id: int | None = None
     unsafe_chat_type: str | None = None
     unsafe_chat_title: str | None = None
+
+
+class BotChatProjectRequest(BaseModel):
+    chat_id: int
+    chat_type: str | None = None
+    title: str | None = None
 
 
 def verify_telegram_init_data(init_data: str, bot_token: str) -> dict:
@@ -239,6 +246,119 @@ def ensure_projects_chat_columns(cur) -> None:
     )
 
 
+def ensure_chat_project(chat_id: int, chat_type: str | None, title: str | None) -> dict:
+    normalized_title = (title or "Новый проект").strip() or "Новый проект"
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_projects_chat_columns(cur)
+                cur.execute(
+                    """
+                    SELECT id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type
+                    FROM projects
+                    WHERE tg_chat_id = %s
+                    LIMIT 1;
+                    """,
+                    (chat_id,),
+                )
+                project = cur.fetchone()
+                if not project:
+                    cur.execute(
+                        """
+                        INSERT INTO projects (tg_chat_id, tg_chat_type, title)
+                        VALUES (%s, %s, %s)
+                        RETURNING id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type;
+                        """,
+                        (chat_id, chat_type, normalized_title),
+                    )
+                    project = cur.fetchone()
+                else:
+                    cur.execute(
+                        """
+                        UPDATE projects
+                        SET
+                            title = %s,
+                            tg_chat_type = COALESCE(%s, tg_chat_type)
+                        WHERE id = %s
+                        RETURNING id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type;
+                        """,
+                        (normalized_title, chat_type, project["id"]),
+                    )
+                    project = cur.fetchone()
+            conn.commit()
+        return project
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while ensuring chat project: {exc}")
+
+
+def ensure_project_member_by_start_param(start_param: str | None, user_id: int) -> dict | None:
+    if not start_param:
+        return None
+    try:
+        project_key = uuid.UUID(start_param)
+    except ValueError:
+        return None
+
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(
+                    """
+                    SELECT id, project_key, title, tg_chat_id, tg_chat_instance, tg_chat_type
+                    FROM projects
+                    WHERE project_key = %s
+                    LIMIT 1;
+                    """,
+                    (str(project_key),),
+                )
+                project = cur.fetchone()
+                if not project:
+                    return None
+
+                cur.execute(
+                    """
+                    SELECT EXISTS(
+                        SELECT 1
+                        FROM project_members
+                        WHERE project_id = %s AND is_active = TRUE
+                    ) AS has_members;
+                    """,
+                    (project["id"],),
+                )
+                has_members_row = cur.fetchone()
+                has_members = bool(has_members_row["has_members"]) if has_members_row else False
+                default_role = "OWNER" if not has_members else "MEMBER"
+
+                cur.execute(
+                    """
+                    INSERT INTO project_members (project_id, user_id, role, is_active)
+                    VALUES (%s, %s, %s, TRUE)
+                    ON CONFLICT (project_id, user_id)
+                    DO UPDATE SET is_active = TRUE
+                    RETURNING role;
+                    """,
+                    (project["id"], user_id, default_role),
+                )
+                member_row = cur.fetchone()
+            conn.commit()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while ensuring start_param project: {exc}")
+
+    return {
+        "id": project["id"],
+        "project_key": project["project_key"],
+        "title": project["title"],
+        "tg_chat_id": project["tg_chat_id"],
+        "tg_chat_instance": project["tg_chat_instance"],
+        "tg_chat_type": project["tg_chat_type"],
+        "role": member_row["role"] if member_row else None,
+    }
+
+
 def ensure_chat_project_for_user(auth_context: dict, user_id: int) -> dict | None:
     chat = auth_context.get("chat") if isinstance(auth_context.get("chat"), dict) else None
     raw_tg_chat_id = chat.get("id") if chat else None
@@ -394,6 +514,8 @@ def auth_telegram(payload: TelegramAuthRequest) -> dict:
         context["chat_type"] = payload.unsafe_chat_type
     db_user = save_or_update_user(user)
     active_project = ensure_chat_project_for_user(context, db_user["id"])
+    if active_project is None:
+        active_project = ensure_project_member_by_start_param(context.get("start_param"), db_user["id"])
     return {
         "ok": True,
         "user": user,
@@ -401,6 +523,18 @@ def auth_telegram(payload: TelegramAuthRequest) -> dict:
         "active_project": active_project,
         "launched_from_chat": active_project is not None,
     }
+
+
+@app.post("/bot/chat-project")
+def bot_chat_project(payload: BotChatProjectRequest, x_bot_token: str | None = Header(default=None)) -> dict:
+    expected_token = os.getenv("BOT_INTERNAL_TOKEN")
+    if not expected_token:
+        raise HTTPException(status_code=503, detail="BOT_INTERNAL_TOKEN is not configured")
+    if not x_bot_token or x_bot_token != expected_token:
+        raise HTTPException(status_code=401, detail="Invalid bot token")
+
+    project = ensure_chat_project(payload.chat_id, payload.chat_type, payload.title)
+    return {"ok": True, "project": project}
 
 
 @app.delete("/projects/{project_id}")

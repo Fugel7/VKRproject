@@ -23,6 +23,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_POSTGRES_USER:-vkr_user}:${POSTGRES_POSTGRES_PASSWORD:-vkr_pass}@postgres:5432/${POSTGRES_POSTGRES_DB:-vkr_db}
       APP_ENV: production
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      BOT_INTERNAL_TOKEN: ${BOT_INTERNAL_TOKEN}
     depends_on:
       - postgres
     ports:
@@ -38,6 +39,10 @@ services:
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       WEB_APP_URL: ${WEB_APP_URL}
+      BOT_INTERNAL_TOKEN: ${BOT_INTERNAL_TOKEN}
+      BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:8000}
+      BOT_USERNAME: ${BOT_USERNAME}
+      MINI_APP_SHORT_NAME: ${MINI_APP_SHORT_NAME}
     depends_on:
       - backend
 
