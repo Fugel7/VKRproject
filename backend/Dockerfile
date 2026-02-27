@@ -9,6 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+COPY bot ./bot
 COPY scripts ./scripts
 COPY schema.sql ./schema.sql
 
