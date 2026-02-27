@@ -31,6 +31,7 @@ app.add_middleware(
 
 class TelegramAuthRequest(BaseModel):
     init_data: str
+    start_param: str | None = None
     unsafe_chat_id: int | None = None
     unsafe_chat_type: str | None = None
     unsafe_chat_title: str | None = None
@@ -512,10 +513,12 @@ def auth_telegram(payload: TelegramAuthRequest) -> dict:
         context["chat"] = fallback_chat
     if not context.get("chat_type") and payload.unsafe_chat_type:
         context["chat_type"] = payload.unsafe_chat_type
+    if not context.get("start_param") and payload.start_param:
+        context["start_param"] = payload.start_param
     db_user = save_or_update_user(user)
-    active_project = ensure_chat_project_for_user(context, db_user["id"])
+    active_project = ensure_project_member_by_start_param(context.get("start_param"), db_user["id"])
     if active_project is None:
-        active_project = ensure_project_member_by_start_param(context.get("start_param"), db_user["id"])
+        active_project = ensure_chat_project_for_user(context, db_user["id"])
     return {
         "ok": True,
         "user": user,

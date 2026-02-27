@@ -131,11 +131,14 @@ export default function App() {
 
       try {
         const unsafeChat = tg.initDataUnsafe?.chat ?? null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const webStartParam = urlParams.get('tgWebAppStartParam');
         const response = await fetch(`${apiBase}/auth/telegram`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             init_data: tg.initData,
+            start_param: webStartParam,
             unsafe_chat_id: unsafeChat?.id ?? null,
             unsafe_chat_type: unsafeChat?.type ?? null,
             unsafe_chat_title: unsafeChat?.title ?? null
