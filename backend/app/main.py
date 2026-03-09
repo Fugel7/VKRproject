@@ -338,6 +338,9 @@ def ensure_sprint_tables(cur) -> None:
             REFERENCES sprints(id)
             ON DELETE SET NULL;
           END IF;
+        EXCEPTION
+          WHEN duplicate_object THEN
+            NULL;
         END
         $$;
         """

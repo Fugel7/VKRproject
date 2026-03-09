@@ -7,25 +7,7 @@ const STATUS_OPTIONS = [
 ];
 
 function applyTelegramTheme() {
-  const tg = window.Telegram?.WebApp;
-  if (!tg?.themeParams) return;
-
-  const root = document.documentElement;
-  const map = {
-    '--bg': tg.themeParams.bg_color,
-    '--text': tg.themeParams.text_color,
-    '--muted': tg.themeParams.hint_color,
-    '--card': tg.themeParams.secondary_bg_color,
-    '--card-alt': tg.themeParams.section_bg_color,
-    '--accent': tg.themeParams.button_color,
-    '--accent-text': tg.themeParams.button_text_color,
-    '--link': tg.themeParams.link_color,
-    '--danger': tg.themeParams.destructive_text_color
-  };
-
-  Object.entries(map).forEach(([cssVar, value]) => {
-    if (value) root.style.setProperty(cssVar, value);
-  });
+  // Intentionally keep app branding independent from Telegram theme colors.
 }
 
 function toDisplayName(user) {
@@ -109,8 +91,8 @@ export default function App() {
   const [sprints, setSprints] = useState([]);
   const [boardLoading, setBoardLoading] = useState(false);
   const [boardError, setBoardError] = useState(null);
-  const [showTaskForm, setShowTaskForm] = useState(false);
-  const [showSprintForm, setShowSprintForm] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showSprintModal, setShowSprintModal] = useState(false);
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -352,7 +334,7 @@ export default function App() {
         throw new Error(errorPayload?.detail || `Task create failed ${response.status}`);
       }
       setTaskForm({ title: '', description: '', deadline_at: '', status: 'NEW', sprint_id: '' });
-      setShowTaskForm(false);
+      setShowTaskModal(false);
       await loadBoard(selectedProject.id, authState.user.tg_id);
     } catch (error) {
       setBoardError(`Не удалось создать задачу. ${error?.message ?? ''}`.trim());
@@ -374,7 +356,7 @@ export default function App() {
         throw new Error(errorPayload?.detail || `Sprint create failed ${response.status}`);
       }
       setSprintFormTitle('');
-      setShowSprintForm(false);
+      setShowSprintModal(false);
       await loadBoard(selectedProject.id, authState.user.tg_id);
     } catch (error) {
       setBoardError(`Не удалось создать спринт. ${error?.message ?? ''}`.trim());
@@ -520,88 +502,13 @@ export default function App() {
         {boardError && <p className="auth-hint">{boardError}</p>}
 
         <div className="board-actions">
-          <button className="open-btn" onClick={() => setShowTaskForm((v) => !v)}>
-            {showTaskForm ? 'Скрыть форму задачи' : 'Новая задача'}
+          <button className="open-btn" onClick={() => setShowTaskModal(true)}>
+            Новая задача
           </button>
-          <button className="open-btn" onClick={() => setShowSprintForm((v) => !v)}>
-            {showSprintForm ? 'Скрыть форму спринта' : 'Новый спринт'}
+          <button className="open-btn" onClick={() => setShowSprintModal(true)}>
+            Новый спринт
           </button>
         </div>
-
-        {showTaskForm && (
-          <form className="card form-card" onSubmit={createTask}>
-            <h3>Создать задачу</h3>
-            <input
-              className="search"
-              placeholder="Название"
-              value={taskForm.title}
-              onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
-              required
-            />
-            <textarea
-              className="textarea"
-              placeholder="Описание"
-              value={taskForm.description}
-              onChange={(e) => setTaskForm((prev) => ({ ...prev, description: e.target.value }))}
-            />
-            <div className="form-row">
-              <label className="field">
-                <span>Дедлайн</span>
-                <input
-                  type="datetime-local"
-                  value={taskForm.deadline_at}
-                  onChange={(e) => setTaskForm((prev) => ({ ...prev, deadline_at: e.target.value }))}
-                />
-              </label>
-              <label className="field">
-                <span>Статус</span>
-                <select
-                  value={taskForm.status}
-                  onChange={(e) => setTaskForm((prev) => ({ ...prev, status: e.target.value }))}
-                >
-                  {STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>Спринт</span>
-                <select
-                  value={taskForm.sprint_id}
-                  onChange={(e) => setTaskForm((prev) => ({ ...prev, sprint_id: e.target.value }))}
-                >
-                  <option value="">Без спринта</option>
-                  {sprints.map((sprint) => (
-                    <option key={sprint.id} value={sprint.id}>
-                      {sprint.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <button className="open-btn" type="submit">
-              Создать задачу
-            </button>
-          </form>
-        )}
-
-        {showSprintForm && (
-          <form className="card form-card" onSubmit={createSprint}>
-            <h3>Создать спринт</h3>
-            <input
-              className="search"
-              placeholder="Название спринта"
-              value={sprintFormTitle}
-              onChange={(e) => setSprintFormTitle(e.target.value)}
-              required
-            />
-            <button className="open-btn" type="submit">
-              Создать спринт
-            </button>
-          </form>
-        )}
 
         {boardLoading && <div className="empty">Загружаем данные проекта...</div>}
 
@@ -666,7 +573,7 @@ export default function App() {
                             className="open-btn small-btn"
                             type="button"
                             onClick={() => {
-                              setShowTaskForm(true);
+                              setShowTaskModal(true);
                               setTaskForm((prev) => ({ ...prev, sprint_id: String(sprint.id) }));
                             }}
                           >
@@ -691,6 +598,99 @@ export default function App() {
                   );
                 })}
               </div>
+            </section>
+          </div>
+        )}
+
+        {showTaskModal && (
+          <div className="modal-overlay" onClick={() => setShowTaskModal(false)}>
+            <section className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <h3>Создать задачу</h3>
+              <form className="form-card" onSubmit={createTask}>
+                <input
+                  className="search"
+                  placeholder="Название"
+                  value={taskForm.title}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
+                  required
+                />
+                <textarea
+                  className="textarea"
+                  placeholder="Описание"
+                  value={taskForm.description}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, description: e.target.value }))}
+                />
+                <div className="form-row">
+                  <label className="field">
+                    <span>Дедлайн</span>
+                    <input
+                      type="datetime-local"
+                      value={taskForm.deadline_at}
+                      onChange={(e) => setTaskForm((prev) => ({ ...prev, deadline_at: e.target.value }))}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Статус</span>
+                    <select
+                      value={taskForm.status}
+                      onChange={(e) => setTaskForm((prev) => ({ ...prev, status: e.target.value }))}
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Спринт</span>
+                    <select
+                      value={taskForm.sprint_id}
+                      onChange={(e) => setTaskForm((prev) => ({ ...prev, sprint_id: e.target.value }))}
+                    >
+                      <option value="">Без спринта</option>
+                      {sprints.map((sprint) => (
+                        <option key={sprint.id} value={sprint.id}>
+                          {sprint.title}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="meta">
+                  <button className="open-btn" type="submit">
+                    Создать задачу
+                  </button>
+                  <button className="back-btn" type="button" onClick={() => setShowTaskModal(false)}>
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>
+        )}
+
+        {showSprintModal && (
+          <div className="modal-overlay" onClick={() => setShowSprintModal(false)}>
+            <section className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <h3>Создать спринт</h3>
+              <form className="form-card" onSubmit={createSprint}>
+                <input
+                  className="search"
+                  placeholder="Название спринта"
+                  value={sprintFormTitle}
+                  onChange={(e) => setSprintFormTitle(e.target.value)}
+                  required
+                />
+                <div className="meta">
+                  <button className="open-btn" type="submit">
+                    Создать спринт
+                  </button>
+                  <button className="back-btn" type="button" onClick={() => setShowSprintModal(false)}>
+                    Отмена
+                  </button>
+                </div>
+              </form>
             </section>
           </div>
         )}
