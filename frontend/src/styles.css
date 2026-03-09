@@ -269,6 +269,13 @@ body {
   gap: 10px;
 }
 
+.field-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .textarea {
   width: 100%;
   min-height: 92px;
@@ -298,6 +305,23 @@ body {
   font-size: 12px;
 }
 
+.edit-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.edit-icon-btn:hover {
+  border-color: #bed2e7;
+  color: var(--accent-strong);
+}
+
 .field input,
 .field select {
   border: 1px solid var(--line);
@@ -306,6 +330,18 @@ body {
   background: var(--surface);
   color: var(--text);
   outline: none;
+}
+
+.field input[readonly],
+.textarea[readonly],
+.field select:disabled {
+  background: #f4f7fb;
+  color: #556277;
+  cursor: default;
+}
+
+.task-details-input {
+  margin: 0;
 }
 
 .task-list,
@@ -443,6 +479,34 @@ body {
   display: grid;
   gap: 10px;
   box-shadow: 0 30px 70px rgba(15, 27, 44, 0.25);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-head h3 {
+  margin: 0;
+}
+
+.modal-close-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: #42506a;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  border-color: #bed2e7;
+  color: #1f2f47;
 }
 
 .comment-card p {

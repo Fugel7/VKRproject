@@ -104,9 +104,19 @@ export default function App() {
   });
   const [expandedSprints, setExpandedSprints] = useState({});
   const [taskDetails, setTaskDetails] = useState(null);
+  const [taskDetailsEditing, setTaskDetailsEditing] = useState({
+    title: false,
+    description: false,
+    status: false,
+    execution_hours: false
+  });
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const isTaskDetailsEditing = useMemo(
+    () => Object.values(taskDetailsEditing).some(Boolean),
+    [taskDetailsEditing]
+  );
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -416,8 +426,25 @@ export default function App() {
 
   function openTaskDetails(task) {
     setTaskDetails({ ...task, execution_hours: task.execution_hours ?? '' });
+    setTaskDetailsEditing({
+      title: false,
+      description: false,
+      status: false,
+      execution_hours: false
+    });
     setCommentText('');
     void loadTaskComments(task.id);
+  }
+
+  function closeTaskDetails() {
+    setTaskDetails(null);
+    setTaskDetailsEditing({
+      title: false,
+      description: false,
+      status: false,
+      execution_hours: false
+    });
+    setCommentText('');
   }
 
   async function loadTaskComments(taskId) {
@@ -452,7 +479,7 @@ export default function App() {
       if (selectedProject?.id && authState.user?.tg_id) {
         await loadBoard(selectedProject.id, authState.user.tg_id);
       }
-      setTaskDetails(null);
+      closeTaskDetails();
     } catch (error) {
       setBoardError(`Не удалось сохранить задачу. ${error?.message ?? ''}`.trim());
     }
@@ -650,7 +677,17 @@ export default function App() {
         {showTaskModal && (
           <div className="modal-overlay" onClick={() => setShowTaskModal(false)}>
             <section className="modal-card" onClick={(e) => e.stopPropagation()}>
-              <h3>Создать задачу</h3>
+              <div className="modal-head">
+                <h3>Создать задачу</h3>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setShowTaskModal(false)}
+                  aria-label="Закрыть окно"
+                >
+                  ×
+                </button>
+              </div>
               <form className="form-card" onSubmit={createTask}>
                 <input
                   className="search"
@@ -720,7 +757,17 @@ export default function App() {
         {showSprintModal && (
           <div className="modal-overlay" onClick={() => setShowSprintModal(false)}>
             <section className="modal-card" onClick={(e) => e.stopPropagation()}>
-              <h3>Создать спринт</h3>
+              <div className="modal-head">
+                <h3>Создать спринт</h3>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setShowSprintModal(false)}
+                  aria-label="Закрыть окно"
+                >
+                  ×
+                </button>
+              </div>
               <form className="form-card" onSubmit={createSprint}>
                 <input
                   className="search"
@@ -761,26 +808,78 @@ export default function App() {
         )}
 
         {taskDetails && (
-          <div className="modal-overlay" onClick={() => setTaskDetails(null)}>
+          <div className="modal-overlay" onClick={closeTaskDetails}>
             <section className="modal-card" onClick={(e) => e.stopPropagation()}>
-              <h3>Задача</h3>
+              <div className="modal-head">
+                <h3>Задача</h3>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={closeTaskDetails}
+                  aria-label="Закрыть окно"
+                >
+                  ×
+                </button>
+              </div>
               <form onSubmit={saveTaskDetails} className="form-card">
-                <input
-                  className="search"
-                  value={taskDetails.title}
-                  onChange={(e) => setTaskDetails((prev) => ({ ...prev, title: e.target.value }))}
-                  required
-                />
-                <textarea
-                  className="textarea"
-                  value={taskDetails.description ?? ''}
-                  onChange={(e) => setTaskDetails((prev) => ({ ...prev, description: e.target.value }))}
-                />
+                <label className="field">
+                  <div className="field-top">
+                    <span>Название</span>
+                    <button
+                      type="button"
+                      className="edit-icon-btn"
+                      onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, title: true }))}
+                      aria-label="Редактировать название"
+                      title="Редактировать название"
+                    >
+                      ✎
+                    </button>
+                  </div>
+                  <input
+                    className="search task-details-input"
+                    value={taskDetails.title}
+                    readOnly={!taskDetailsEditing.title}
+                    onChange={(e) => setTaskDetails((prev) => ({ ...prev, title: e.target.value }))}
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <div className="field-top">
+                    <span>Описание</span>
+                    <button
+                      type="button"
+                      className="edit-icon-btn"
+                      onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, description: true }))}
+                      aria-label="Редактировать описание"
+                      title="Редактировать описание"
+                    >
+                      ✎
+                    </button>
+                  </div>
+                  <textarea
+                    className="textarea"
+                    value={taskDetails.description ?? ''}
+                    readOnly={!taskDetailsEditing.description}
+                    onChange={(e) => setTaskDetails((prev) => ({ ...prev, description: e.target.value }))}
+                  />
+                </label>
                 <div className="form-row">
                   <label className="field">
-                    <span>Статус</span>
+                    <div className="field-top">
+                      <span>Статус</span>
+                      <button
+                        type="button"
+                        className="edit-icon-btn"
+                        onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, status: true }))}
+                        aria-label="Редактировать статус"
+                        title="Редактировать статус"
+                      >
+                        ✎
+                      </button>
+                    </div>
                     <select
                       value={taskDetails.status}
+                      disabled={!taskDetailsEditing.status}
                       onChange={(e) => setTaskDetails((prev) => ({ ...prev, status: e.target.value }))}
                     >
                       {STATUS_OPTIONS.map((option) => (
@@ -791,19 +890,33 @@ export default function App() {
                     </select>
                   </label>
                   <label className="field">
-                    <span>Время выполнения (ч)</span>
+                    <div className="field-top">
+                      <span>Время выполнения (ч)</span>
+                      <button
+                        type="button"
+                        className="edit-icon-btn"
+                        onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, execution_hours: true }))}
+                        aria-label="Редактировать время выполнения"
+                        title="Редактировать время выполнения"
+                      >
+                        ✎
+                      </button>
+                    </div>
                     <input
                       type="number"
                       min="1"
                       value={taskDetails.execution_hours ?? ''}
+                      readOnly={!taskDetailsEditing.execution_hours}
                       onChange={(e) => setTaskDetails((prev) => ({ ...prev, execution_hours: e.target.value }))}
                       placeholder="Например: 8"
                     />
                   </label>
                 </div>
-                <button className="open-btn" type="submit">
-                  Сохранить задачу
-                </button>
+                {isTaskDetailsEditing && (
+                  <button className="open-btn" type="submit">
+                    Сохранить задачу
+                  </button>
+                )}
               </form>
 
               <h3>Комментарии</h3>
