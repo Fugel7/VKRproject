@@ -46,19 +46,23 @@ class BotChatProjectRequest(BaseModel):
 class SprintCreateRequest(BaseModel):
     tg_id: int
     title: str
+    start_date: str | None = None
+    end_date: str | None = None
 
 
 class SprintUpdateRequest(BaseModel):
     tg_id: int
     title: str | None = None
     is_open: bool | None = None
+    start_date: str | None = None
+    end_date: str | None = None
 
 
 class TaskCreateRequest(BaseModel):
     tg_id: int
     title: str
     description: str = ""
-    deadline_at: str | None = None
+    execution_hours: int | None = None
     status: str | None = None
     sprint_id: int | None = None
 
@@ -67,7 +71,7 @@ class TaskUpdateRequest(BaseModel):
     tg_id: int
     title: str | None = None
     description: str | None = None
-    deadline_at: str | None = None
+    execution_hours: int | None = None
     status: str | None = None
     sprint_id: int | None = None
 
@@ -317,12 +321,17 @@ def ensure_sprint_tables(cur) -> None:
           id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
           project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
           title TEXT NOT NULL,
+          start_date DATE,
+          end_date DATE,
           is_open BOOLEAN NOT NULL DEFAULT TRUE,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
         """
     )
+    cur.execute("ALTER TABLE sprints ADD COLUMN IF NOT EXISTS start_date DATE;")
+    cur.execute("ALTER TABLE sprints ADD COLUMN IF NOT EXISTS end_date DATE;")
     cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS sprint_id BIGINT;")
+    cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS execution_hours INTEGER;")
     cur.execute(
         """
         DO $$
@@ -580,7 +589,7 @@ def list_project_tasks(project_id: int, tg_id: int) -> list[dict]:
                       t.title,
                       t.description,
                       t.status,
-                      t.deadline_at,
+                      t.execution_hours,
                       t.created_at,
                       t.updated_at
                     FROM tasks t
@@ -607,10 +616,10 @@ def list_project_sprints(project_id: int, tg_id: int) -> list[dict]:
                 ensure_project_member(cur, project_id, user_id)
                 cur.execute(
                     """
-                    SELECT id, project_id, title, is_open, created_at
+                    SELECT id, project_id, title, start_date, end_date, is_open, created_at
                     FROM sprints
                     WHERE project_id = %s
-                    ORDER BY created_at DESC, id DESC;
+                    ORDER BY created_at ASC, id ASC;
                     """,
                     (project_id,),
                 )
@@ -635,11 +644,11 @@ def create_project_sprint(project_id: int, payload: SprintCreateRequest) -> dict
                 ensure_project_member(cur, project_id, user_id)
                 cur.execute(
                     """
-                    INSERT INTO sprints (project_id, title, is_open)
-                    VALUES (%s, %s, TRUE)
-                    RETURNING id, project_id, title, is_open, created_at;
+                    INSERT INTO sprints (project_id, title, start_date, end_date, is_open)
+                    VALUES (%s, %s, %s, %s, TRUE)
+                    RETURNING id, project_id, title, start_date, end_date, is_open, created_at;
                     """,
-                    (project_id, title),
+                    (project_id, title, payload.start_date, payload.end_date),
                 )
                 sprint = cur.fetchone()
             conn.commit()
@@ -653,7 +662,7 @@ def create_project_sprint(project_id: int, payload: SprintCreateRequest) -> dict
 
 
 def update_sprint(sprint_id: int, payload: SprintUpdateRequest) -> dict:
-    if payload.title is None and payload.is_open is None:
+    if payload.title is None and payload.is_open is None and payload.start_date is None and payload.end_date is None:
         raise HTTPException(status_code=400, detail="No sprint fields to update")
     try:
         with connect(get_database_url()) as conn:
@@ -670,11 +679,19 @@ def update_sprint(sprint_id: int, payload: SprintUpdateRequest) -> dict:
                     UPDATE sprints
                     SET
                       title = COALESCE(%s, title),
+                      start_date = COALESCE(%s, start_date),
+                      end_date = COALESCE(%s, end_date),
                       is_open = COALESCE(%s, is_open)
                     WHERE id = %s
-                    RETURNING id, project_id, title, is_open, created_at;
+                    RETURNING id, project_id, title, start_date, end_date, is_open, created_at;
                     """,
-                    (payload.title.strip() if payload.title is not None else None, payload.is_open, sprint_id),
+                    (
+                        payload.title.strip() if payload.title is not None else None,
+                        payload.start_date,
+                        payload.end_date,
+                        payload.is_open,
+                        sprint_id,
+                    ),
                 )
                 updated = cur.fetchone()
             conn.commit()
@@ -692,6 +709,8 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
     if not title:
         raise HTTPException(status_code=400, detail="Task title is required")
     status = normalize_task_status(payload.status)
+    if payload.execution_hours is not None and payload.execution_hours <= 0:
+        raise HTTPException(status_code=400, detail="Execution hours must be greater than zero")
     try:
         with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
@@ -708,10 +727,10 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
                 cur.execute(
                     """
                     INSERT INTO tasks (
-                      project_id, sprint_id, title, description, status, author_id, assignee_id, deadline_at
+                      project_id, sprint_id, title, description, status, author_id, assignee_id, execution_hours
                     )
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    RETURNING id, project_id, sprint_id, title, description, status, deadline_at, created_at, updated_at;
+                    RETURNING id, project_id, sprint_id, title, description, status, execution_hours, created_at, updated_at;
                     """,
                     (
                         project_id,
@@ -721,7 +740,7 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
                         status,
                         user_id,
                         user_id,
-                        payload.deadline_at,
+                        payload.execution_hours,
                     ),
                 )
                 task = cur.fetchone()
@@ -739,7 +758,7 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
     if (
         payload.title is None
         and payload.description is None
-        and payload.deadline_at is None
+        and payload.execution_hours is None
         and payload.status is None
         and payload.sprint_id is None
     ):
@@ -747,7 +766,9 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
     status = normalize_task_status(payload.status) if payload.status is not None else None
     fields_set = payload.model_fields_set
     sprint_value = payload.sprint_id if "sprint_id" in fields_set else "__KEEP__"
-    deadline_value = payload.deadline_at if "deadline_at" in fields_set else "__KEEP__"
+    execution_hours_value = payload.execution_hours if "execution_hours" in fields_set else "__KEEP__"
+    if execution_hours_value != "__KEEP__" and execution_hours_value is not None and execution_hours_value <= 0:
+        raise HTTPException(status_code=400, detail="Execution hours must be greater than zero")
     try:
         with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
@@ -772,17 +793,17 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
                     SET
                       title = COALESCE(%s, title),
                       description = COALESCE(%s, description),
-                      deadline_at = CASE WHEN %s THEN %s ELSE deadline_at END,
+                      execution_hours = CASE WHEN %s THEN %s ELSE execution_hours END,
                       status = COALESCE(%s, status),
                       sprint_id = CASE WHEN %s THEN %s ELSE sprint_id END
                     WHERE id = %s
-                    RETURNING id, project_id, sprint_id, title, description, status, deadline_at, created_at, updated_at;
+                    RETURNING id, project_id, sprint_id, title, description, status, execution_hours, created_at, updated_at;
                     """,
                     (
                         payload.title.strip() if payload.title is not None else None,
                         payload.description,
-                        deadline_value != "__KEEP__",
-                        None if deadline_value == "__KEEP__" else deadline_value,
+                        execution_hours_value != "__KEEP__",
+                        None if execution_hours_value == "__KEEP__" else execution_hours_value,
                         status,
                         sprint_value != "__KEEP__",
                         None if sprint_value == "__KEEP__" else sprint_value,

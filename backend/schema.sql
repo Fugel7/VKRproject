@@ -60,6 +60,7 @@ CREATE TABLE tasks (
   title VARCHAR(120) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   status task_status NOT NULL DEFAULT 'NEW',
+  execution_hours INTEGER CHECK (execution_hours IS NULL OR execution_hours > 0),
   author_id BIGINT NOT NULL,
   assignee_id BIGINT NOT NULL,
   deadline_at TIMESTAMPTZ,
@@ -79,6 +80,8 @@ CREATE TABLE sprints (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
+  start_date DATE,
+  end_date DATE,
   is_open BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

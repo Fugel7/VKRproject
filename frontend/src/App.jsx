@@ -38,16 +38,6 @@ function statusMeta(status) {
   return STATUS_OPTIONS.find((item) => item.value === status) || STATUS_OPTIONS[0];
 }
 
-function toDateTimeInputValue(dateLike) {
-  if (!dateLike) return '';
-  const dt = new Date(dateLike);
-  if (Number.isNaN(dt.getTime())) return '';
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(
-    dt.getMinutes()
-  )}`;
-}
-
 function toDeadlineLabel(dateLike) {
   if (!dateLike) return 'Без дедлайна';
   const dt = new Date(dateLike);
@@ -59,6 +49,13 @@ function toDeadlineLabel(dateLike) {
     hour: '2-digit',
     minute: '2-digit'
   });
+}
+
+function toSprintDateLabel(value) {
+  if (!value) return '—';
+  const dt = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(dt.getTime())) return value;
+  return dt.toLocaleDateString('ru-RU');
 }
 
 function TaskProgress({ status }) {
@@ -96,11 +93,15 @@ export default function App() {
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
-    deadline_at: '',
+    execution_hours: '',
     status: 'NEW',
     sprint_id: ''
   });
-  const [sprintFormTitle, setSprintFormTitle] = useState('');
+  const [sprintForm, setSprintForm] = useState({
+    title: '',
+    start_date: '',
+    end_date: ''
+  });
   const [expandedSprints, setExpandedSprints] = useState({});
   const [taskDetails, setTaskDetails] = useState(null);
   const [comments, setComments] = useState([]);
@@ -324,7 +325,7 @@ export default function App() {
           tg_id: authState.user.tg_id,
           title: taskForm.title,
           description: taskForm.description,
-          deadline_at: taskForm.deadline_at ? new Date(taskForm.deadline_at).toISOString() : null,
+          execution_hours: taskForm.execution_hours ? Number(taskForm.execution_hours) : null,
           status: taskForm.status,
           sprint_id: taskForm.sprint_id ? Number(taskForm.sprint_id) : null
         })
@@ -333,7 +334,7 @@ export default function App() {
         const errorPayload = await response.json().catch(() => ({}));
         throw new Error(errorPayload?.detail || `Task create failed ${response.status}`);
       }
-      setTaskForm({ title: '', description: '', deadline_at: '', status: 'NEW', sprint_id: '' });
+      setTaskForm({ title: '', description: '', execution_hours: '', status: 'NEW', sprint_id: '' });
       setShowTaskModal(false);
       await loadBoard(selectedProject.id, authState.user.tg_id);
     } catch (error) {
@@ -349,13 +350,18 @@ export default function App() {
       const response = await fetch(`${apiBase}/projects/${selectedProject.id}/sprints`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tg_id: authState.user.tg_id, title: sprintFormTitle })
+        body: JSON.stringify({
+          tg_id: authState.user.tg_id,
+          title: sprintForm.title,
+          start_date: sprintForm.start_date || null,
+          end_date: sprintForm.end_date || null
+        })
       });
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => ({}));
         throw new Error(errorPayload?.detail || `Sprint create failed ${response.status}`);
       }
-      setSprintFormTitle('');
+      setSprintForm({ title: '', start_date: '', end_date: '' });
       setShowSprintModal(false);
       await loadBoard(selectedProject.id, authState.user.tg_id);
     } catch (error) {
@@ -389,7 +395,7 @@ export default function App() {
   }
 
   function openTaskDetails(task) {
-    setTaskDetails({ ...task, deadline_at: toDateTimeInputValue(task.deadline_at) });
+    setTaskDetails({ ...task, execution_hours: task.execution_hours ?? '' });
     setCommentText('');
     void loadTaskComments(task.id);
   }
@@ -421,7 +427,7 @@ export default function App() {
         title: taskDetails.title,
         description: taskDetails.description,
         status: taskDetails.status,
-        deadline_at: taskDetails.deadline_at ? new Date(taskDetails.deadline_at).toISOString() : null
+        execution_hours: taskDetails.execution_hours === '' ? null : Number(taskDetails.execution_hours)
       });
       if (selectedProject?.id && authState.user?.tg_id) {
         await loadBoard(selectedProject.id, authState.user.tg_id);
@@ -531,7 +537,9 @@ export default function App() {
                       <span>{task.description || 'Без описания'}</span>
                     </button>
                     <TaskProgress status={task.status} />
-                    <div className="task-meta">Срок выполнения: {toDeadlineLabel(task.deadline_at)}</div>
+                    <div className="task-meta">
+                      Время выполнения: {task.execution_hours ? `${task.execution_hours} ч` : 'не указано'}
+                    </div>
                   </article>
                 ))}
               </div>
@@ -561,6 +569,9 @@ export default function App() {
                         <strong>{sprint.title}</strong>
                         <span>{isOpen ? 'Свернуть' : 'Открыть'}</span>
                       </button>
+                      <p className="screen-subtitle sprint-dates">
+                        Срок спринта: {toSprintDateLabel(sprint.start_date)} - {toSprintDateLabel(sprint.end_date)}
+                      </p>
                       <div className="progress-line sprint-progress">
                         <div className="progress-fill" style={{ width: `${sprintProgress}%` }} />
                       </div>
@@ -588,7 +599,9 @@ export default function App() {
                                   <span>{task.description || 'Без описания'}</span>
                                 </button>
                                 <TaskProgress status={task.status} />
-                                <div className="task-meta">Срок выполнения: {toDeadlineLabel(task.deadline_at)}</div>
+                                <div className="task-meta">
+                                  Время выполнения: {task.execution_hours ? `${task.execution_hours} ч` : 'не указано'}
+                                </div>
                               </article>
                             ))}
                           </div>
@@ -622,11 +635,13 @@ export default function App() {
                 />
                 <div className="form-row">
                   <label className="field">
-                    <span>Дедлайн</span>
+                    <span>Время выполнения (ч)</span>
                     <input
-                      type="datetime-local"
-                      value={taskForm.deadline_at}
-                      onChange={(e) => setTaskForm((prev) => ({ ...prev, deadline_at: e.target.value }))}
+                      type="number"
+                      min="1"
+                      value={taskForm.execution_hours}
+                      onChange={(e) => setTaskForm((prev) => ({ ...prev, execution_hours: e.target.value }))}
+                      placeholder="Например: 8"
                     />
                   </label>
                   <label className="field">
@@ -678,10 +693,28 @@ export default function App() {
                 <input
                   className="search"
                   placeholder="Название спринта"
-                  value={sprintFormTitle}
-                  onChange={(e) => setSprintFormTitle(e.target.value)}
+                  value={sprintForm.title}
+                  onChange={(e) => setSprintForm((prev) => ({ ...prev, title: e.target.value }))}
                   required
                 />
+                <div className="form-row">
+                  <label className="field">
+                    <span>Дата начала</span>
+                    <input
+                      type="date"
+                      value={sprintForm.start_date}
+                      onChange={(e) => setSprintForm((prev) => ({ ...prev, start_date: e.target.value }))}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Дата конца</span>
+                    <input
+                      type="date"
+                      value={sprintForm.end_date}
+                      onChange={(e) => setSprintForm((prev) => ({ ...prev, end_date: e.target.value }))}
+                    />
+                  </label>
+                </div>
                 <div className="meta">
                   <button className="open-btn" type="submit">
                     Создать спринт
@@ -726,11 +759,13 @@ export default function App() {
                     </select>
                   </label>
                   <label className="field">
-                    <span>Дедлайн</span>
+                    <span>Время выполнения (ч)</span>
                     <input
-                      type="datetime-local"
-                      value={taskDetails.deadline_at || ''}
-                      onChange={(e) => setTaskDetails((prev) => ({ ...prev, deadline_at: e.target.value }))}
+                      type="number"
+                      min="1"
+                      value={taskDetails.execution_hours ?? ''}
+                      onChange={(e) => setTaskDetails((prev) => ({ ...prev, execution_hours: e.target.value }))}
+                      placeholder="Например: 8"
                     />
                   </label>
                 </div>
@@ -818,22 +853,34 @@ export default function App() {
 
         {!projectsLoading &&
           visibleProjects.map((project) => (
-            <article key={project.id} className="card">
+            <article
+              key={project.id}
+              className="card project-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedProject(project)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setSelectedProject(project);
+                }
+              }}
+            >
+              <button
+                className="delete-icon-btn"
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void deleteProject(project);
+                }}
+                disabled={deletingProjectId === project.id}
+                aria-label="Удалить проект"
+                title="Удалить проект"
+              >
+                {deletingProjectId === project.id ? '…' : '🗑'}
+              </button>
               <h3>{project.title}</h3>
-
-              <div className="meta">
-                <button className="open-btn" onClick={() => setSelectedProject(project)}>
-                  Открыть проект
-                </button>
-                <button
-                  className="back-btn"
-                  type="button"
-                  onClick={() => deleteProject(project)}
-                  disabled={deletingProjectId === project.id}
-                >
-                  {deletingProjectId === project.id ? 'Удаляем...' : 'Удалить проект'}
-                </button>
-              </div>
+              <p className="screen-subtitle">Откройте карточку, чтобы перейти в проект</p>
             </article>
           ))}
       </section>
