@@ -56,6 +56,7 @@ CREATE TABLE project_members (
 CREATE TABLE tasks (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  sprint_id BIGINT,
   title VARCHAR(120) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   status task_status NOT NULL DEFAULT 'NEW',
@@ -73,6 +74,20 @@ CREATE TABLE tasks (
     REFERENCES project_members(project_id, user_id)
     ON DELETE RESTRICT
 );
+
+CREATE TABLE sprints (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  is_open BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE tasks
+  ADD CONSTRAINT fk_tasks_sprint
+  FOREIGN KEY (sprint_id)
+  REFERENCES sprints(id)
+  ON DELETE SET NULL;
 
 CREATE TABLE comments (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -129,8 +144,14 @@ CREATE INDEX idx_tasks_project_deadline
 CREATE INDEX idx_tasks_project_updated_desc
   ON tasks(project_id, updated_at DESC);
 
+CREATE INDEX idx_tasks_project_sprint
+  ON tasks(project_id, sprint_id, updated_at DESC);
+
 CREATE INDEX idx_tasks_project_author
   ON tasks(project_id, author_id);
+
+CREATE INDEX idx_sprints_project
+  ON sprints(project_id, created_at DESC);
 
 CREATE INDEX idx_comments_task_created
   ON comments(task_id, created_at);

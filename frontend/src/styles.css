@@ -204,6 +204,181 @@ body {
   margin-top: 8px;
 }
 
+.board-actions {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 12px;
+  flex-wrap: wrap;
+}
+
+.board-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+.form-card {
+  display: grid;
+  gap: 10px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 86px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  resize: vertical;
+  font-size: 14px;
+  background: var(--card);
+  color: var(--text);
+}
+
+.form-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.field input,
+.field select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--card);
+  color: var(--text);
+}
+
+.task-list,
+.sprint-list,
+.comment-list {
+  display: grid;
+  gap: 8px;
+}
+
+.task-card,
+.sprint-card,
+.comment-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card-alt);
+  padding: 10px;
+}
+
+.task-open,
+.sprint-header {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  color: inherit;
+}
+
+.task-open strong,
+.sprint-header strong {
+  font-size: 15px;
+}
+
+.task-open span,
+.sprint-header span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.progress-wrap {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.progress-line {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #dbe5f2;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8 0%, #2563eb 100%);
+}
+
+.progress-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sprint-progress {
+  margin: 8px 0 4px;
+}
+
+.task-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.small-btn {
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.compact {
+  padding: 10px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 14px;
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.comment-card p {
+  margin: 6px 0;
+}
+
+.comment-card span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.comment-form {
+  display: grid;
+  gap: 8px;
+}
+
 @media (max-width: 420px) {
   .screen-title {
     font-size: 23px;
@@ -211,5 +386,9 @@ body {
 
   .card h3 {
     font-size: 18px;
+  }
+
+  .board-actions {
+    grid-template-columns: 1fr;
   }
 }

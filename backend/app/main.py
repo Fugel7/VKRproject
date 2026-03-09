@@ -43,6 +43,40 @@ class BotChatProjectRequest(BaseModel):
     title: str | None = None
 
 
+class SprintCreateRequest(BaseModel):
+    tg_id: int
+    title: str
+
+
+class SprintUpdateRequest(BaseModel):
+    tg_id: int
+    title: str | None = None
+    is_open: bool | None = None
+
+
+class TaskCreateRequest(BaseModel):
+    tg_id: int
+    title: str
+    description: str = ""
+    deadline_at: str | None = None
+    status: str | None = None
+    sprint_id: int | None = None
+
+
+class TaskUpdateRequest(BaseModel):
+    tg_id: int
+    title: str | None = None
+    description: str | None = None
+    deadline_at: str | None = None
+    status: str | None = None
+    sprint_id: int | None = None
+
+
+class CommentCreateRequest(BaseModel):
+    tg_id: int
+    text: str
+
+
 def verify_telegram_init_data(init_data: str, bot_token: str) -> dict:
     pairs = dict(parse_qsl(init_data, keep_blank_values=True))
     incoming_hash = pairs.pop("hash", None)
@@ -141,6 +175,38 @@ def get_user_by_tg_id(tg_id: int) -> dict | None:
         raise HTTPException(status_code=503, detail=str(exc))
     except PsycopgError as exc:
         raise HTTPException(status_code=500, detail=f"Database error while loading user: {exc}")
+
+
+def get_user_id_by_tg_id(cur, tg_id: int) -> int:
+    cur.execute("SELECT id FROM users WHERE tg_id = %s LIMIT 1;", (tg_id,))
+    user_row = cur.fetchone()
+    if not user_row:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user_row["id"]
+
+
+def ensure_project_member(cur, project_id: int, user_id: int) -> None:
+    cur.execute(
+        """
+        SELECT 1
+        FROM project_members
+        WHERE project_id = %s AND user_id = %s AND is_active = TRUE
+        LIMIT 1;
+        """,
+        (project_id, user_id),
+    )
+    if not cur.fetchone():
+        raise HTTPException(status_code=403, detail="Access denied for this project")
+
+
+def normalize_task_status(status: str | None) -> str:
+    if not status:
+        return "NEW"
+    status_upper = status.strip().upper()
+    allowed = {"NEW", "IN_PROGRESS", "DONE"}
+    if status_upper not in allowed:
+        raise HTTPException(status_code=400, detail="Invalid task status")
+    return status_upper
 
 
 def get_projects_by_tg_id(tg_id: int) -> list[dict]:
@@ -242,6 +308,42 @@ def ensure_projects_chat_columns(cur) -> None:
           WHERE tg_chat_instance IS NOT NULL;
         """
     )
+
+
+def ensure_sprint_tables(cur) -> None:
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sprints (
+          id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+          title TEXT NOT NULL,
+          is_open BOOLEAN NOT NULL DEFAULT TRUE,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS sprint_id BIGINT;")
+    cur.execute(
+        """
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conname = 'fk_tasks_sprint'
+          ) THEN
+            ALTER TABLE tasks
+            ADD CONSTRAINT fk_tasks_sprint
+            FOREIGN KEY (sprint_id)
+            REFERENCES sprints(id)
+            ON DELETE SET NULL;
+          END IF;
+        END
+        $$;
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_sprints_project ON sprints(project_id, created_at DESC);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_tasks_project_sprint ON tasks(project_id, sprint_id, updated_at DESC);")
 
 
 def ensure_chat_project(chat_id: int, chat_type: str | None, title: str | None) -> dict:
@@ -459,6 +561,313 @@ def ensure_chat_project_for_user(auth_context: dict, user_id: int) -> dict | Non
     }
 
 
+def list_project_tasks(project_id: int, tg_id: int) -> list[dict]:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, tg_id)
+                ensure_project_member(cur, project_id, user_id)
+                cur.execute(
+                    """
+                    SELECT
+                      t.id,
+                      t.project_id,
+                      t.sprint_id,
+                      t.title,
+                      t.description,
+                      t.status,
+                      t.deadline_at,
+                      t.created_at,
+                      t.updated_at
+                    FROM tasks t
+                    WHERE t.project_id = %s
+                    ORDER BY t.updated_at DESC, t.id DESC;
+                    """,
+                    (project_id,),
+                )
+                return cur.fetchall()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while loading tasks: {exc}")
+
+
+def list_project_sprints(project_id: int, tg_id: int) -> list[dict]:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, tg_id)
+                ensure_project_member(cur, project_id, user_id)
+                cur.execute(
+                    """
+                    SELECT id, project_id, title, is_open, created_at
+                    FROM sprints
+                    WHERE project_id = %s
+                    ORDER BY created_at DESC, id DESC;
+                    """,
+                    (project_id,),
+                )
+                return cur.fetchall()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while loading sprints: {exc}")
+
+
+def create_project_sprint(project_id: int, payload: SprintCreateRequest) -> dict:
+    title = payload.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Sprint title is required")
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, payload.tg_id)
+                ensure_project_member(cur, project_id, user_id)
+                cur.execute(
+                    """
+                    INSERT INTO sprints (project_id, title, is_open)
+                    VALUES (%s, %s, TRUE)
+                    RETURNING id, project_id, title, is_open, created_at;
+                    """,
+                    (project_id, title),
+                )
+                sprint = cur.fetchone()
+            conn.commit()
+            return sprint
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while creating sprint: {exc}")
+
+
+def update_sprint(sprint_id: int, payload: SprintUpdateRequest) -> dict:
+    if payload.title is None and payload.is_open is None:
+        raise HTTPException(status_code=400, detail="No sprint fields to update")
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, payload.tg_id)
+                cur.execute("SELECT project_id FROM sprints WHERE id = %s LIMIT 1;", (sprint_id,))
+                sprint_row = cur.fetchone()
+                if not sprint_row:
+                    raise HTTPException(status_code=404, detail="Sprint not found")
+                ensure_project_member(cur, sprint_row["project_id"], user_id)
+                cur.execute(
+                    """
+                    UPDATE sprints
+                    SET
+                      title = COALESCE(%s, title),
+                      is_open = COALESCE(%s, is_open)
+                    WHERE id = %s
+                    RETURNING id, project_id, title, is_open, created_at;
+                    """,
+                    (payload.title.strip() if payload.title is not None else None, payload.is_open, sprint_id),
+                )
+                updated = cur.fetchone()
+            conn.commit()
+            return updated
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while updating sprint: {exc}")
+
+
+def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
+    title = payload.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Task title is required")
+    status = normalize_task_status(payload.status)
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, payload.tg_id)
+                ensure_project_member(cur, project_id, user_id)
+                if payload.sprint_id is not None:
+                    cur.execute(
+                        "SELECT 1 FROM sprints WHERE id = %s AND project_id = %s LIMIT 1;",
+                        (payload.sprint_id, project_id),
+                    )
+                    if not cur.fetchone():
+                        raise HTTPException(status_code=404, detail="Sprint not found in this project")
+                cur.execute(
+                    """
+                    INSERT INTO tasks (
+                      project_id, sprint_id, title, description, status, author_id, assignee_id, deadline_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id, project_id, sprint_id, title, description, status, deadline_at, created_at, updated_at;
+                    """,
+                    (
+                        project_id,
+                        payload.sprint_id,
+                        title,
+                        payload.description or "",
+                        status,
+                        user_id,
+                        user_id,
+                        payload.deadline_at,
+                    ),
+                )
+                task = cur.fetchone()
+            conn.commit()
+            return task
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while creating task: {exc}")
+
+
+def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
+    if (
+        payload.title is None
+        and payload.description is None
+        and payload.deadline_at is None
+        and payload.status is None
+        and payload.sprint_id is None
+    ):
+        raise HTTPException(status_code=400, detail="No task fields to update")
+    status = normalize_task_status(payload.status) if payload.status is not None else None
+    fields_set = payload.model_fields_set
+    sprint_value = payload.sprint_id if "sprint_id" in fields_set else "__KEEP__"
+    deadline_value = payload.deadline_at if "deadline_at" in fields_set else "__KEEP__"
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, payload.tg_id)
+                cur.execute("SELECT id, project_id FROM tasks WHERE id = %s LIMIT 1;", (task_id,))
+                task_row = cur.fetchone()
+                if not task_row:
+                    raise HTTPException(status_code=404, detail="Task not found")
+                project_id = task_row["project_id"]
+                ensure_project_member(cur, project_id, user_id)
+                if payload.sprint_id is not None:
+                    cur.execute(
+                        "SELECT 1 FROM sprints WHERE id = %s AND project_id = %s LIMIT 1;",
+                        (payload.sprint_id, project_id),
+                    )
+                    if not cur.fetchone():
+                        raise HTTPException(status_code=404, detail="Sprint not found in this project")
+                cur.execute(
+                    """
+                    UPDATE tasks
+                    SET
+                      title = COALESCE(%s, title),
+                      description = COALESCE(%s, description),
+                      deadline_at = CASE WHEN %s THEN %s ELSE deadline_at END,
+                      status = COALESCE(%s, status),
+                      sprint_id = CASE WHEN %s THEN %s ELSE sprint_id END
+                    WHERE id = %s
+                    RETURNING id, project_id, sprint_id, title, description, status, deadline_at, created_at, updated_at;
+                    """,
+                    (
+                        payload.title.strip() if payload.title is not None else None,
+                        payload.description,
+                        deadline_value != "__KEEP__",
+                        None if deadline_value == "__KEEP__" else deadline_value,
+                        status,
+                        sprint_value != "__KEEP__",
+                        None if sprint_value == "__KEEP__" else sprint_value,
+                        task_id,
+                    ),
+                )
+                updated = cur.fetchone()
+            conn.commit()
+            return updated
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while updating task: {exc}")
+
+
+def list_task_comments(task_id: int, tg_id: int) -> list[dict]:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, tg_id)
+                cur.execute("SELECT project_id FROM tasks WHERE id = %s LIMIT 1;", (task_id,))
+                task_row = cur.fetchone()
+                if not task_row:
+                    raise HTTPException(status_code=404, detail="Task not found")
+                ensure_project_member(cur, task_row["project_id"], user_id)
+                cur.execute(
+                    """
+                    SELECT
+                      c.id,
+                      c.task_id,
+                      c.text,
+                      c.created_at,
+                      u.id AS author_id,
+                      u.first_name,
+                      u.last_name,
+                      u.username
+                    FROM comments c
+                    JOIN users u ON u.id = c.author_id
+                    WHERE c.task_id = %s
+                    ORDER BY c.created_at ASC, c.id ASC;
+                    """,
+                    (task_id,),
+                )
+                return cur.fetchall()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while loading comments: {exc}")
+
+
+def create_task_comment(task_id: int, payload: CommentCreateRequest) -> dict:
+    text = payload.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Comment text is required")
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, payload.tg_id)
+                cur.execute("SELECT project_id FROM tasks WHERE id = %s LIMIT 1;", (task_id,))
+                task_row = cur.fetchone()
+                if not task_row:
+                    raise HTTPException(status_code=404, detail="Task not found")
+                ensure_project_member(cur, task_row["project_id"], user_id)
+                cur.execute(
+                    """
+                    INSERT INTO comments (task_id, author_id, text)
+                    VALUES (%s, %s, %s)
+                    RETURNING id, task_id, text, created_at;
+                    """,
+                    (task_id, user_id, text),
+                )
+                comment = cur.fetchone()
+            conn.commit()
+            return comment
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while creating comment: {exc}")
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -483,6 +892,46 @@ def me(tg_id: int) -> dict:
 @app.get("/projects")
 def projects(tg_id: int) -> dict:
     return {"ok": True, "projects": get_projects_by_tg_id(tg_id)}
+
+
+@app.get("/projects/{project_id}/tasks")
+def project_tasks(project_id: int, tg_id: int) -> dict:
+    return {"ok": True, "tasks": list_project_tasks(project_id, tg_id)}
+
+
+@app.post("/projects/{project_id}/tasks")
+def project_create_task(project_id: int, payload: TaskCreateRequest) -> dict:
+    return {"ok": True, "task": create_project_task(project_id, payload)}
+
+
+@app.patch("/tasks/{task_id}")
+def patch_task(task_id: int, payload: TaskUpdateRequest) -> dict:
+    return {"ok": True, "task": update_task(task_id, payload)}
+
+
+@app.get("/tasks/{task_id}/comments")
+def task_comments(task_id: int, tg_id: int) -> dict:
+    return {"ok": True, "comments": list_task_comments(task_id, tg_id)}
+
+
+@app.post("/tasks/{task_id}/comments")
+def create_comment(task_id: int, payload: CommentCreateRequest) -> dict:
+    return {"ok": True, "comment": create_task_comment(task_id, payload)}
+
+
+@app.get("/projects/{project_id}/sprints")
+def project_sprints(project_id: int, tg_id: int) -> dict:
+    return {"ok": True, "sprints": list_project_sprints(project_id, tg_id)}
+
+
+@app.post("/projects/{project_id}/sprints")
+def project_create_sprint(project_id: int, payload: SprintCreateRequest) -> dict:
+    return {"ok": True, "sprint": create_project_sprint(project_id, payload)}
+
+
+@app.patch("/sprints/{sprint_id}")
+def patch_sprint(sprint_id: int, payload: SprintUpdateRequest) -> dict:
+    return {"ok": True, "sprint": update_sprint(sprint_id, payload)}
 
 
 @app.post("/auth/telegram")

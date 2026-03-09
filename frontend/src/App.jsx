@@ -1,5 +1,11 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
 
+const STATUS_OPTIONS = [
+  { value: 'NEW', label: 'Запланирован', progress: 33 },
+  { value: 'IN_PROGRESS', label: 'В работе', progress: 66 },
+  { value: 'DONE', label: 'Готово', progress: 100 }
+];
+
 function applyTelegramTheme() {
   const tg = window.Telegram?.WebApp;
   if (!tg?.themeParams) return;
@@ -46,6 +52,45 @@ function getApiBase() {
   return '/api';
 }
 
+function statusMeta(status) {
+  return STATUS_OPTIONS.find((item) => item.value === status) || STATUS_OPTIONS[0];
+}
+
+function toDateTimeInputValue(dateLike) {
+  if (!dateLike) return '';
+  const dt = new Date(dateLike);
+  if (Number.isNaN(dt.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(
+    dt.getMinutes()
+  )}`;
+}
+
+function toDeadlineLabel(dateLike) {
+  if (!dateLike) return 'Без дедлайна';
+  const dt = new Date(dateLike);
+  if (Number.isNaN(dt.getTime())) return 'Без дедлайна';
+  return dt.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function TaskProgress({ status }) {
+  const meta = statusMeta(status);
+  return (
+    <div className="progress-wrap">
+      <div className="progress-line">
+        <div className="progress-fill" style={{ width: `${meta.progress}%` }} />
+      </div>
+      <span className="progress-label">{meta.label}</span>
+    </div>
+  );
+}
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
@@ -59,6 +104,26 @@ export default function App() {
     source: null,
     error: null
   });
+
+  const [tasks, setTasks] = useState([]);
+  const [sprints, setSprints] = useState([]);
+  const [boardLoading, setBoardLoading] = useState(false);
+  const [boardError, setBoardError] = useState(null);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showSprintForm, setShowSprintForm] = useState(false);
+  const [taskForm, setTaskForm] = useState({
+    title: '',
+    description: '',
+    deadline_at: '',
+    status: 'NEW',
+    sprint_id: ''
+  });
+  const [sprintFormTitle, setSprintFormTitle] = useState('');
+  const [expandedSprints, setExpandedSprints] = useState({});
+  const [taskDetails, setTaskDetails] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -189,6 +254,46 @@ export default function App() {
     return projects.filter((project) => project.title.toLowerCase().includes(lowered));
   }, [projects, query]);
 
+  const backlogTasks = useMemo(() => tasks.filter((task) => task.sprint_id == null), [tasks]);
+
+  async function loadBoard(projectId, tgId) {
+    const apiBase = getApiBase();
+    setBoardLoading(true);
+    setBoardError(null);
+    try {
+      const [tasksRes, sprintsRes] = await Promise.all([
+        fetch(`${apiBase}/projects/${projectId}/tasks?tg_id=${encodeURIComponent(tgId)}`),
+        fetch(`${apiBase}/projects/${projectId}/sprints?tg_id=${encodeURIComponent(tgId)}`)
+      ]);
+      if (!tasksRes.ok || !sprintsRes.ok) {
+        throw new Error(`Не удалось загрузить данные проекта (${tasksRes.status}/${sprintsRes.status})`);
+      }
+      const tasksData = await tasksRes.json();
+      const sprintsData = await sprintsRes.json();
+      setTasks(Array.isArray(tasksData?.tasks) ? tasksData.tasks : []);
+      const sprintList = Array.isArray(sprintsData?.sprints) ? sprintsData.sprints : [];
+      setSprints(sprintList);
+      setExpandedSprints((prev) => {
+        const next = { ...prev };
+        sprintList.forEach((sprint) => {
+          if (next[sprint.id] == null) next[sprint.id] = !!sprint.is_open;
+        });
+        return next;
+      });
+    } catch (error) {
+      setBoardError(`Не удалось загрузить задачи и спринты. ${error?.message ?? ''}`.trim());
+      setTasks([]);
+      setSprints([]);
+    } finally {
+      setBoardLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedProject?.id || !authState.user?.tg_id) return;
+    loadBoard(selectedProject.id, authState.user.tg_id);
+  }, [selectedProject?.id, authState.user?.tg_id]);
+
   async function deleteProject(project) {
     if (!project?.id || !authState.user?.tg_id) return;
 
@@ -225,6 +330,162 @@ export default function App() {
     }
   }
 
+  async function createTask(event) {
+    event.preventDefault();
+    if (!selectedProject?.id || !authState.user?.tg_id) return;
+    const apiBase = getApiBase();
+    try {
+      const response = await fetch(`${apiBase}/projects/${selectedProject.id}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tg_id: authState.user.tg_id,
+          title: taskForm.title,
+          description: taskForm.description,
+          deadline_at: taskForm.deadline_at ? new Date(taskForm.deadline_at).toISOString() : null,
+          status: taskForm.status,
+          sprint_id: taskForm.sprint_id ? Number(taskForm.sprint_id) : null
+        })
+      });
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload?.detail || `Task create failed ${response.status}`);
+      }
+      setTaskForm({ title: '', description: '', deadline_at: '', status: 'NEW', sprint_id: '' });
+      setShowTaskForm(false);
+      await loadBoard(selectedProject.id, authState.user.tg_id);
+    } catch (error) {
+      setBoardError(`Не удалось создать задачу. ${error?.message ?? ''}`.trim());
+    }
+  }
+
+  async function createSprint(event) {
+    event.preventDefault();
+    if (!selectedProject?.id || !authState.user?.tg_id) return;
+    const apiBase = getApiBase();
+    try {
+      const response = await fetch(`${apiBase}/projects/${selectedProject.id}/sprints`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tg_id: authState.user.tg_id, title: sprintFormTitle })
+      });
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload?.detail || `Sprint create failed ${response.status}`);
+      }
+      setSprintFormTitle('');
+      setShowSprintForm(false);
+      await loadBoard(selectedProject.id, authState.user.tg_id);
+    } catch (error) {
+      setBoardError(`Не удалось создать спринт. ${error?.message ?? ''}`.trim());
+    }
+  }
+
+  async function updateTask(taskId, fields) {
+    if (!authState.user?.tg_id) return;
+    const apiBase = getApiBase();
+    const response = await fetch(`${apiBase}/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tg_id: authState.user.tg_id, ...fields })
+    });
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      throw new Error(errorPayload?.detail || `Task update failed ${response.status}`);
+    }
+  }
+
+  async function moveTaskToSprint(taskId, sprintId) {
+    try {
+      await updateTask(taskId, { sprint_id: sprintId });
+      if (selectedProject?.id && authState.user?.tg_id) {
+        await loadBoard(selectedProject.id, authState.user.tg_id);
+      }
+    } catch (error) {
+      setBoardError(`Не удалось переместить задачу в спринт. ${error?.message ?? ''}`.trim());
+    }
+  }
+
+  function openTaskDetails(task) {
+    setTaskDetails({ ...task, deadline_at: toDateTimeInputValue(task.deadline_at) });
+    setCommentText('');
+    void loadTaskComments(task.id);
+  }
+
+  async function loadTaskComments(taskId) {
+    if (!authState.user?.tg_id) return;
+    setCommentsLoading(true);
+    try {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/tasks/${taskId}/comments?tg_id=${encodeURIComponent(authState.user.tg_id)}`);
+      if (!response.ok) {
+        throw new Error(`Comments failed ${response.status}`);
+      }
+      const data = await response.json();
+      setComments(Array.isArray(data?.comments) ? data.comments : []);
+    } catch (error) {
+      setBoardError(`Не удалось загрузить комментарии. ${error?.message ?? ''}`.trim());
+      setComments([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }
+
+  async function saveTaskDetails(event) {
+    event.preventDefault();
+    if (!taskDetails?.id) return;
+    try {
+      await updateTask(taskDetails.id, {
+        title: taskDetails.title,
+        description: taskDetails.description,
+        status: taskDetails.status,
+        deadline_at: taskDetails.deadline_at ? new Date(taskDetails.deadline_at).toISOString() : null
+      });
+      if (selectedProject?.id && authState.user?.tg_id) {
+        await loadBoard(selectedProject.id, authState.user.tg_id);
+      }
+      setTaskDetails(null);
+    } catch (error) {
+      setBoardError(`Не удалось сохранить задачу. ${error?.message ?? ''}`.trim());
+    }
+  }
+
+  async function createComment(event) {
+    event.preventDefault();
+    if (!taskDetails?.id || !commentText.trim() || !authState.user?.tg_id) return;
+    try {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/tasks/${taskDetails.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tg_id: authState.user.tg_id, text: commentText.trim() })
+      });
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload?.detail || `Comment create failed ${response.status}`);
+      }
+      setCommentText('');
+      await loadTaskComments(taskDetails.id);
+    } catch (error) {
+      setBoardError(`Не удалось добавить комментарий. ${error?.message ?? ''}`.trim());
+    }
+  }
+
+  function sprintTasksSorted(sprintId) {
+    const order = { DONE: 0, IN_PROGRESS: 1, NEW: 2 };
+    return tasks
+      .filter((task) => task.sprint_id === sprintId)
+      .sort((a, b) => {
+        const statusDiff = (order[a.status] ?? 9) - (order[b.status] ?? 9);
+        if (statusDiff !== 0) return statusDiff;
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      });
+  }
+
+  function toggleSprint(sprintId, current) {
+    setExpandedSprints((prev) => ({ ...prev, [sprintId]: !current }));
+  }
+
   function openProfile() {
     if (!authState.user) return;
     const tg = window.Telegram?.WebApp;
@@ -248,18 +509,268 @@ export default function App() {
     return (
       <main className="app">
         <div className="screen-header">
-          <h1 className="screen-title">Список задач</h1>
-          <p className="screen-subtitle">Проект: {selectedProject.title}</p>
+          <h1 className="screen-title">{selectedProject.title}</h1>
+          <p className="screen-subtitle">Задачи и спринты проекта</p>
         </div>
 
         <button className="back-btn" onClick={() => setSelectedProject(null)}>
           Назад к списку проектов
         </button>
 
-        <section className="card task-placeholder">
-          <h3>Экран задач</h3>
-          <p className="screen-subtitle">Здесь будет список задач выбранного проекта.</p>
-        </section>
+        {boardError && <p className="auth-hint">{boardError}</p>}
+
+        <div className="board-actions">
+          <button className="open-btn" onClick={() => setShowTaskForm((v) => !v)}>
+            {showTaskForm ? 'Скрыть форму задачи' : 'Новая задача'}
+          </button>
+          <button className="open-btn" onClick={() => setShowSprintForm((v) => !v)}>
+            {showSprintForm ? 'Скрыть форму спринта' : 'Новый спринт'}
+          </button>
+        </div>
+
+        {showTaskForm && (
+          <form className="card form-card" onSubmit={createTask}>
+            <h3>Создать задачу</h3>
+            <input
+              className="search"
+              placeholder="Название"
+              value={taskForm.title}
+              onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
+              required
+            />
+            <textarea
+              className="textarea"
+              placeholder="Описание"
+              value={taskForm.description}
+              onChange={(e) => setTaskForm((prev) => ({ ...prev, description: e.target.value }))}
+            />
+            <div className="form-row">
+              <label className="field">
+                <span>Дедлайн</span>
+                <input
+                  type="datetime-local"
+                  value={taskForm.deadline_at}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, deadline_at: e.target.value }))}
+                />
+              </label>
+              <label className="field">
+                <span>Статус</span>
+                <select
+                  value={taskForm.status}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, status: e.target.value }))}
+                >
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Спринт</span>
+                <select
+                  value={taskForm.sprint_id}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, sprint_id: e.target.value }))}
+                >
+                  <option value="">Без спринта</option>
+                  {sprints.map((sprint) => (
+                    <option key={sprint.id} value={sprint.id}>
+                      {sprint.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <button className="open-btn" type="submit">
+              Создать задачу
+            </button>
+          </form>
+        )}
+
+        {showSprintForm && (
+          <form className="card form-card" onSubmit={createSprint}>
+            <h3>Создать спринт</h3>
+            <input
+              className="search"
+              placeholder="Название спринта"
+              value={sprintFormTitle}
+              onChange={(e) => setSprintFormTitle(e.target.value)}
+              required
+            />
+            <button className="open-btn" type="submit">
+              Создать спринт
+            </button>
+          </form>
+        )}
+
+        {boardLoading && <div className="empty">Загружаем данные проекта...</div>}
+
+        {!boardLoading && (
+          <div className="board-grid">
+            <section className="card">
+              <h3>Задачи</h3>
+              <p className="screen-subtitle">Перетащите задачу в спринт, чтобы добавить ее в план.</p>
+              <div className="task-list">
+                {backlogTasks.length === 0 && <div className="empty compact">Свободных задач нет</div>}
+                {backlogTasks.map((task) => (
+                  <article
+                    key={task.id}
+                    className="task-card"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('text/task-id', String(task.id))}
+                  >
+                    <button type="button" className="task-open" onClick={() => openTaskDetails(task)}>
+                      <strong>{task.title}</strong>
+                      <span>{task.description || 'Без описания'}</span>
+                    </button>
+                    <TaskProgress status={task.status} />
+                    <div className="task-meta">Срок выполнения: {toDeadlineLabel(task.deadline_at)}</div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="card">
+              <h3>Спринты</h3>
+              <div className="sprint-list">
+                {sprints.length === 0 && <div className="empty compact">Спринтов пока нет</div>}
+                {sprints.map((sprint) => {
+                  const sprintTasks = sprintTasksSorted(sprint.id);
+                  const doneCount = sprintTasks.filter((task) => task.status === 'DONE').length;
+                  const sprintProgress = sprintTasks.length ? Math.round((doneCount / sprintTasks.length) * 100) : 0;
+                  const isOpen = !!expandedSprints[sprint.id];
+
+                  return (
+                    <article
+                      key={sprint.id}
+                      className="sprint-card"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        const draggedTaskId = Number(e.dataTransfer.getData('text/task-id'));
+                        if (draggedTaskId) void moveTaskToSprint(draggedTaskId, sprint.id);
+                      }}
+                    >
+                      <button type="button" className="sprint-header" onClick={() => toggleSprint(sprint.id, isOpen)}>
+                        <strong>{sprint.title}</strong>
+                        <span>{isOpen ? 'Свернуть' : 'Открыть'}</span>
+                      </button>
+                      <div className="progress-line sprint-progress">
+                        <div className="progress-fill" style={{ width: `${sprintProgress}%` }} />
+                      </div>
+                      <p className="screen-subtitle">
+                        Выполнено: {doneCount} из {sprintTasks.length}
+                      </p>
+                      {isOpen && (
+                        <>
+                          <button
+                            className="open-btn small-btn"
+                            type="button"
+                            onClick={() => {
+                              setShowTaskForm(true);
+                              setTaskForm((prev) => ({ ...prev, sprint_id: String(sprint.id) }));
+                            }}
+                          >
+                            Добавить задачу в спринт
+                          </button>
+                          <div className="task-list">
+                            {sprintTasks.length === 0 && <div className="empty compact">Задач в спринте нет</div>}
+                            {sprintTasks.map((task) => (
+                              <article key={task.id} className="task-card">
+                                <button type="button" className="task-open" onClick={() => openTaskDetails(task)}>
+                                  <strong>{task.title}</strong>
+                                  <span>{task.description || 'Без описания'}</span>
+                                </button>
+                                <TaskProgress status={task.status} />
+                                <div className="task-meta">Срок выполнения: {toDeadlineLabel(task.deadline_at)}</div>
+                              </article>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {taskDetails && (
+          <div className="modal-overlay" onClick={() => setTaskDetails(null)}>
+            <section className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <h3>Задача</h3>
+              <form onSubmit={saveTaskDetails} className="form-card">
+                <input
+                  className="search"
+                  value={taskDetails.title}
+                  onChange={(e) => setTaskDetails((prev) => ({ ...prev, title: e.target.value }))}
+                  required
+                />
+                <textarea
+                  className="textarea"
+                  value={taskDetails.description ?? ''}
+                  onChange={(e) => setTaskDetails((prev) => ({ ...prev, description: e.target.value }))}
+                />
+                <div className="form-row">
+                  <label className="field">
+                    <span>Статус</span>
+                    <select
+                      value={taskDetails.status}
+                      onChange={(e) => setTaskDetails((prev) => ({ ...prev, status: e.target.value }))}
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Дедлайн</span>
+                    <input
+                      type="datetime-local"
+                      value={taskDetails.deadline_at || ''}
+                      onChange={(e) => setTaskDetails((prev) => ({ ...prev, deadline_at: e.target.value }))}
+                    />
+                  </label>
+                </div>
+                <button className="open-btn" type="submit">
+                  Сохранить задачу
+                </button>
+              </form>
+
+              <h3>Комментарии</h3>
+              <div className="comment-list">
+                {commentsLoading && <div className="empty compact">Загружаем комментарии...</div>}
+                {!commentsLoading && comments.length === 0 && <div className="empty compact">Комментариев нет</div>}
+                {!commentsLoading &&
+                  comments.map((comment) => (
+                    <article className="comment-card" key={comment.id}>
+                      <strong>
+                        {[comment.first_name, comment.last_name].filter(Boolean).join(' ').trim() ||
+                          comment.username ||
+                          `User ${comment.author_id}`}
+                      </strong>
+                      <p>{comment.text}</p>
+                      <span>{toDeadlineLabel(comment.created_at)}</span>
+                    </article>
+                  ))}
+              </div>
+              <form className="comment-form" onSubmit={createComment}>
+                <textarea
+                  className="textarea"
+                  placeholder="Оставить комментарий"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  required
+                />
+                <button className="open-btn" type="submit">
+                  Отправить
+                </button>
+              </form>
+            </section>
+          </div>
+        )}
       </main>
     );
   }
