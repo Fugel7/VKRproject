@@ -394,6 +394,26 @@ export default function App() {
     }
   }
 
+  async function deleteSprint(sprintId, sprintTitle) {
+    if (!authState.user?.tg_id || !selectedProject?.id) return;
+    const confirmed = window.confirm(`Удалить спринт "${sprintTitle}"? Задачи останутся и перейдут в общий список.`);
+    if (!confirmed) return;
+    try {
+      const apiBase = getApiBase();
+      const response = await fetch(
+        `${apiBase}/sprints/${encodeURIComponent(sprintId)}?tg_id=${encodeURIComponent(authState.user.tg_id)}`,
+        { method: 'DELETE' }
+      );
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload?.detail || `Sprint delete failed ${response.status}`);
+      }
+      await loadBoard(selectedProject.id, authState.user.tg_id);
+    } catch (error) {
+      setBoardError(`Не удалось удалить спринт. ${error?.message ?? ''}`.trim());
+    }
+  }
+
   function openTaskDetails(task) {
     setTaskDetails({ ...task, execution_hours: task.execution_hours ?? '' });
     setCommentText('');
@@ -565,6 +585,18 @@ export default function App() {
                         if (draggedTaskId) void moveTaskToSprint(draggedTaskId, sprint.id);
                       }}
                     >
+                      <button
+                        type="button"
+                        className="sprint-delete-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void deleteSprint(sprint.id, sprint.title);
+                        }}
+                        aria-label="Удалить спринт"
+                        title="Удалить спринт"
+                      >
+                        🗑
+                      </button>
                       <button type="button" className="sprint-header" onClick={() => toggleSprint(sprint.id, isOpen)}>
                         <strong>{sprint.title}</strong>
                         <span>{isOpen ? 'Свернуть' : 'Открыть'}</span>

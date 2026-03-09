@@ -325,9 +325,28 @@ body {
 }
 
 .sprint-card {
+  position: relative;
   padding: 14px;
   display: grid;
   gap: 8px;
+}
+
+.sprint-delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: #ffe4e6;
+  color: #b91c1c;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sprint-delete-btn:hover {
+  background: #fecdd3;
 }
 
 .task-open,

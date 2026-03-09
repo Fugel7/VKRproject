@@ -704,6 +704,29 @@ def update_sprint(sprint_id: int, payload: SprintUpdateRequest) -> dict:
         raise HTTPException(status_code=500, detail=f"Database error while updating sprint: {exc}")
 
 
+def delete_sprint(sprint_id: int, tg_id: int) -> dict:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                user_id = get_user_id_by_tg_id(cur, tg_id)
+                cur.execute("SELECT project_id FROM sprints WHERE id = %s LIMIT 1;", (sprint_id,))
+                sprint_row = cur.fetchone()
+                if not sprint_row:
+                    raise HTTPException(status_code=404, detail="Sprint not found")
+                ensure_project_member(cur, sprint_row["project_id"], user_id)
+                cur.execute("DELETE FROM sprints WHERE id = %s RETURNING id;", (sprint_id,))
+                deleted = cur.fetchone()
+            conn.commit()
+            return deleted or {"id": sprint_id}
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while deleting sprint: {exc}")
+
+
 def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
     title = payload.title.strip()
     if not title:
@@ -956,6 +979,12 @@ def project_create_sprint(project_id: int, payload: SprintCreateRequest) -> dict
 @app.patch("/sprints/{sprint_id}")
 def patch_sprint(sprint_id: int, payload: SprintUpdateRequest) -> dict:
     return {"ok": True, "sprint": update_sprint(sprint_id, payload)}
+
+
+@app.delete("/sprints/{sprint_id}")
+def remove_sprint(sprint_id: int, tg_id: int) -> dict:
+    deleted = delete_sprint(sprint_id, tg_id)
+    return {"ok": True, "deleted_sprint_id": deleted["id"]}
 
 
 @app.post("/auth/telegram")
