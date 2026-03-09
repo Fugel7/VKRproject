@@ -24,6 +24,8 @@ services:
       APP_ENV: production
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       BOT_INTERNAL_TOKEN: ${BOT_INTERNAL_TOKEN}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openrouter/free}
     depends_on:
       - postgres
     ports:

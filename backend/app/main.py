@@ -4,7 +4,9 @@ import json
 import os
 import time
 import uuid
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl
+from urllib.request import Request, urlopen
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,6 +43,18 @@ class BotChatProjectRequest(BaseModel):
     chat_id: int
     chat_type: str | None = None
     title: str | None = None
+
+
+class BotIngestMessageRequest(BaseModel):
+    chat_id: int
+    chat_type: str | None = None
+    title: str | None = None
+    user_tg_id: int
+    user_username: str | None = None
+    user_first_name: str | None = None
+    user_last_name: str | None = None
+    content_text: str
+    source_type: str | None = None
 
 
 class SprintCreateRequest(BaseModel):
@@ -777,6 +791,193 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
         raise HTTPException(status_code=500, detail=f"Database error while creating task: {exc}")
 
 
+def _extract_json_object(raw_text: str) -> dict:
+    text = (raw_text or "").strip()
+    if not text:
+        raise HTTPException(status_code=502, detail="OpenRouter returned empty content")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end <= start:
+            raise HTTPException(status_code=502, detail="OpenRouter returned non-JSON response")
+        try:
+            return json.loads(text[start : end + 1])
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=502, detail="Failed to parse OpenRouter JSON output") from exc
+
+
+def _extract_openrouter_text(content) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict) and isinstance(item.get("text"), str):
+                parts.append(item["text"])
+        return "\n".join(parts).strip()
+    return ""
+
+
+def _coerce_hours(raw_value) -> int | None:
+    if raw_value is None:
+        return None
+    if isinstance(raw_value, (int, float)):
+        value = int(round(float(raw_value)))
+    else:
+        digits = "".join(ch for ch in str(raw_value) if ch.isdigit())
+        if not digits:
+            return None
+        value = int(digits)
+    if value <= 0:
+        return None
+    return min(value, 999)
+
+
+def _normalize_ai_tasks(items: list[dict]) -> list[dict]:
+    normalized: list[dict] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        if not title:
+            continue
+        description = str(item.get("description") or "").strip()
+        raw_status = item.get("status")
+        try:
+            status = normalize_task_status(raw_status if isinstance(raw_status, str) else None)
+        except HTTPException:
+            status = "NEW"
+        normalized.append(
+            {
+                "title": title[:180],
+                "description": description,
+                "execution_hours": _coerce_hours(item.get("execution_hours")),
+                "status": status,
+            }
+        )
+    return normalized[:15]
+
+
+def extract_tasks_via_openrouter(content_text: str) -> list[dict]:
+    api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    if not api_key:
+        raise HTTPException(status_code=503, detail="OPENROUTER_API_KEY is not configured")
+    model = os.getenv("OPENROUTER_MODEL", "openrouter/free").strip() or "openrouter/free"
+    prompt = (
+        "Извлеки задачи из пользовательского сообщения. "
+        "Верни только JSON-объект формата: "
+        '{"tasks":[{"title":"string","description":"string","execution_hours":number|null,"status":"NEW|IN_PROGRESS|DONE"}]}. '
+        "Не добавляй markdown, пояснения и комментарии. "
+        "Если задач нет, верни {\"tasks\":[]}. "
+        "Оцени execution_hours реалистично."
+    )
+    request_body = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": content_text},
+        ],
+        "temperature": 0.2,
+    }
+    req = Request(
+        url="https://openrouter.ai/api/v1/chat/completions",
+        data=json.dumps(request_body).encode("utf-8"),
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urlopen(req, timeout=45) as response:
+            parsed = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise HTTPException(status_code=502, detail=f"OpenRouter error {exc.code}: {body}") from exc
+    except URLError as exc:
+        raise HTTPException(status_code=502, detail=f"OpenRouter is unreachable: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail="OpenRouter response is not valid JSON") from exc
+
+    choices = parsed.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise HTTPException(status_code=502, detail="OpenRouter returned no choices")
+    message = choices[0].get("message") if isinstance(choices[0], dict) else None
+    content = message.get("content") if isinstance(message, dict) else None
+    content_text_raw = _extract_openrouter_text(content)
+    payload = _extract_json_object(content_text_raw)
+    tasks = payload.get("tasks") if isinstance(payload, dict) else None
+    if not isinstance(tasks, list):
+        raise HTTPException(status_code=502, detail="OpenRouter JSON has no tasks array")
+    return _normalize_ai_tasks(tasks)
+
+
+def create_bot_tasks_from_message(payload: BotIngestMessageRequest) -> dict:
+    text = payload.content_text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Message content is empty")
+    if len(text) > 12000:
+        text = text[:12000]
+
+    project_title = payload.title or "Новый проект"
+    project = ensure_chat_project(payload.chat_id, payload.chat_type, project_title)
+    save_or_update_user(
+        {
+            "id": payload.user_tg_id,
+            "username": payload.user_username,
+            "first_name": payload.user_first_name or "",
+            "last_name": payload.user_last_name,
+            "photo_url": None,
+        }
+    )
+
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                user_id = get_user_id_by_tg_id(cur, payload.user_tg_id)
+                cur.execute(
+                    """
+                    INSERT INTO project_members (project_id, user_id, role, is_active)
+                    VALUES (%s, %s, %s, TRUE)
+                    ON CONFLICT (project_id, user_id)
+                    DO UPDATE SET is_active = TRUE
+                    RETURNING project_id;
+                    """,
+                    (project["id"], user_id, "MEMBER"),
+                )
+                cur.fetchone()
+            conn.commit()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while linking user to project: {exc}")
+
+    extracted_tasks = extract_tasks_via_openrouter(text)
+    created_tasks = []
+    for task in extracted_tasks:
+        created = create_project_task(
+            project["id"],
+            TaskCreateRequest(
+                tg_id=payload.user_tg_id,
+                title=task["title"],
+                description=task["description"],
+                execution_hours=task["execution_hours"],
+                status=task["status"],
+                sprint_id=None,
+            ),
+        )
+        created_tasks.append(created)
+
+    return {
+        "project": project,
+        "created_tasks": created_tasks,
+        "created_count": len(created_tasks),
+        "source_type": payload.source_type or "text",
+    }
+
+
 def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
     if (
         payload.title is None
@@ -1033,6 +1234,17 @@ def bot_chat_project(payload: BotChatProjectRequest, x_bot_token: str | None = H
 
     project = ensure_chat_project(payload.chat_id, payload.chat_type, payload.title)
     return {"ok": True, "project": project}
+
+
+@app.post("/bot/ingest-message")
+def bot_ingest_message(payload: BotIngestMessageRequest, x_bot_token: str | None = Header(default=None)) -> dict:
+    expected_token = os.getenv("BOT_INTERNAL_TOKEN")
+    if not expected_token:
+        raise HTTPException(status_code=503, detail="BOT_INTERNAL_TOKEN is not configured")
+    if not x_bot_token or x_bot_token != expected_token:
+        raise HTTPException(status_code=401, detail="Invalid bot token")
+    result = create_bot_tasks_from_message(payload)
+    return {"ok": True, **result}
 
 
 @app.delete("/projects/{project_id}")
