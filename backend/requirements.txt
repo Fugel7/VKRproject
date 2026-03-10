@@ -5,3 +5,4 @@ aiogram==3.22.0
 pypdf==5.9.0
 python-docx==1.1.2
 faster-whisper==1.1.1
+requests==2.32.3

@@ -10,7 +10,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import Command, CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 from docx import Document
-from faster_whisper import WhisperModel
 from pypdf import PdfReader
 
 
@@ -137,12 +136,14 @@ async def download_telegram_file_bytes(bot: Bot, file_id: str) -> bytes:
     return stream.getvalue()
 
 
-_whisper_model: WhisperModel | None = None
+_whisper_model = None
 
 
-def get_whisper_model() -> WhisperModel:
+def get_whisper_model():
     global _whisper_model
     if _whisper_model is None:
+        from faster_whisper import WhisperModel
+
         model_name = os.getenv("WHISPER_MODEL", "tiny").strip() or "tiny"
         device = os.getenv("WHISPER_DEVICE", "cpu").strip() or "cpu"
         compute_type = os.getenv("WHISPER_COMPUTE_TYPE", "int8").strip() or "int8"
