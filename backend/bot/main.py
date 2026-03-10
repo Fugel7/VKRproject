@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import io
 import json
 import os
 from urllib.error import HTTPError, URLError
@@ -7,6 +9,8 @@ from urllib.request import Request, urlopen
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command, CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
+from docx import Document
+from pypdf import PdfReader
 
 
 def build_web_app_keyboard(web_app_url: str) -> InlineKeyboardMarkup:
@@ -103,6 +107,35 @@ def ingest_message_via_backend(
         raise RuntimeError(f"Backend is unreachable: {exc}") from exc
 
 
+def extract_text_from_pdf_bytes(content: bytes) -> str:
+    try:
+        reader = PdfReader(io.BytesIO(content))
+        chunks = []
+        for page in reader.pages:
+            page_text = page.extract_text() or ""
+            if page_text.strip():
+                chunks.append(page_text)
+        return "\n".join(chunks).strip()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def extract_text_from_docx_bytes(content: bytes) -> str:
+    try:
+        doc = Document(io.BytesIO(content))
+        chunks = [paragraph.text.strip() for paragraph in doc.paragraphs if paragraph.text and paragraph.text.strip()]
+        return "\n".join(chunks).strip()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+async def download_telegram_file_bytes(bot: Bot, file_id: str) -> bytes:
+    file_info = await bot.get_file(file_id)
+    stream = io.BytesIO()
+    await bot.download(file_info.file_path, destination=stream)
+    return stream.getvalue()
+
+
 async def main() -> None:
     token = get_required_env("TELEGRAM_BOT_TOKEN")
     web_app_url = get_required_env("WEB_APP_URL")
@@ -154,12 +187,8 @@ async def main() -> None:
     async def ingest_tasks_from_message(message: Message) -> None:
         if not message.from_user or message.from_user.is_bot:
             return
-        text = (message.text or message.caption or "").strip()
-        if not text:
-            if message.voice or message.video or message.document or message.audio:
-                await message.reply("Добавьте текст/подпись к сообщению. Сейчас задачи извлекаются только из текста.")
-            return
-        if text.startswith("/"):
+        base_text = (message.text or message.caption or "").strip()
+        if base_text.startswith("/"):
             return
 
         source_type = "text"
@@ -174,6 +203,62 @@ async def main() -> None:
         elif message.audio:
             source_type = "audio"
 
+        document_text = ""
+        attachment_kind = None
+        attachment_mime = None
+        attachment_base64 = None
+
+        try:
+            if message.document:
+                source_type = "document"
+                doc_bytes = await download_telegram_file_bytes(bot, message.document.file_id)
+                file_name = (message.document.file_name or "").lower()
+                mime = (message.document.mime_type or "").lower()
+                if mime.startswith("text/") or file_name.endswith(".txt") or file_name.endswith(".md"):
+                    try:
+                        document_text = doc_bytes.decode("utf-8")
+                    except UnicodeDecodeError:
+                        document_text = doc_bytes.decode("cp1251", errors="ignore")
+                elif mime == "application/pdf" or file_name.endswith(".pdf"):
+                    document_text = extract_text_from_pdf_bytes(doc_bytes)
+                elif (
+                    mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    or file_name.endswith(".docx")
+                ):
+                    document_text = extract_text_from_docx_bytes(doc_bytes)
+                else:
+                    await message.reply(
+                        "Пока поддерживаются файлы TXT/PDF/DOCX. "
+                        "Для других форматов добавьте текст с задачами в подпись."
+                    )
+            elif message.photo:
+                source_type = "image"
+                best_photo = message.photo[-1]
+                image_bytes = await download_telegram_file_bytes(bot, best_photo.file_id)
+                if len(image_bytes) > 4 * 1024 * 1024:
+                    await message.reply("Изображение слишком большое. Отправьте файл до 4 МБ.")
+                    return
+                attachment_kind = "image"
+                attachment_mime = "image/jpeg"
+                attachment_base64 = base64.b64encode(image_bytes).decode("ascii")
+        except Exception as exc:  # noqa: BLE001
+            await message.reply(f"Не удалось прочитать вложение: {exc}")
+            return
+
+        text_parts = []
+        if base_text:
+            text_parts.append(base_text)
+        if document_text.strip():
+            text_parts.append("Текст из файла:\n" + document_text.strip())
+        text = "\n\n".join(text_parts).strip()
+
+        if not text and not attachment_base64:
+            await message.reply(
+                "Не удалось получить данные для анализа. "
+                "Добавьте текст/подпись или отправьте файл TXT/PDF/DOCX, либо изображение."
+            )
+            return
+
         payload = {
             "chat_id": int(message.chat.id),
             "chat_type": str(message.chat.type),
@@ -184,6 +269,9 @@ async def main() -> None:
             "user_last_name": message.from_user.last_name,
             "content_text": text,
             "source_type": source_type,
+            "attachment_kind": attachment_kind,
+            "attachment_mime": attachment_mime,
+            "attachment_base64": attachment_base64,
         }
         try:
             result = await asyncio.to_thread(

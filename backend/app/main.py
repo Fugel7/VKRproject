@@ -55,6 +55,9 @@ class BotIngestMessageRequest(BaseModel):
     user_last_name: str | None = None
     content_text: str
     source_type: str | None = None
+    attachment_kind: str | None = None
+    attachment_mime: str | None = None
+    attachment_base64: str | None = None
 
 
 class SprintCreateRequest(BaseModel):
@@ -891,7 +894,13 @@ def _normalize_ai_tasks(items: list[dict]) -> list[dict]:
     return normalized[:15]
 
 
-def extract_tasks_via_openrouter(content_text: str, project_title: str) -> list[dict]:
+def extract_tasks_via_openrouter(
+    content_text: str,
+    project_title: str,
+    attachment_kind: str | None = None,
+    attachment_mime: str | None = None,
+    attachment_base64: str | None = None,
+) -> list[dict]:
     api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if not api_key:
         raise HTTPException(status_code=503, detail="OPENROUTER_API_KEY is not configured")
@@ -913,14 +922,27 @@ def extract_tasks_via_openrouter(content_text: str, project_title: str) -> list[
         "9) execution_hours should be realistic integer estimate or null if uncertain. "
         "10) Do not output markdown or any extra text."
     )
+    user_text = f"Project title: {project_title}\n\nUser message:\n{content_text}"
+    user_content: str | list[dict] = user_text
+    if (
+        attachment_kind == "image"
+        and attachment_base64
+        and attachment_mime
+        and attachment_mime.startswith("image/")
+    ):
+        user_content = [
+            {"type": "text", "text": user_text + "\n\nAlso analyze the attached image content."},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:{attachment_mime};base64,{attachment_base64}"},
+            },
+        ]
+
     request_body = {
         "model": model,
         "messages": [
             {"role": "system", "content": prompt},
-            {
-                "role": "user",
-                "content": f"Project title: {project_title}\\n\\nUser message:\\n{content_text}",
-            },
+            {"role": "user", "content": user_content},
         ],
         "temperature": 0.1,
     }
@@ -971,7 +993,12 @@ def extract_tasks_via_openrouter(content_text: str, project_title: str) -> list[
 
 def create_bot_tasks_from_message(payload: BotIngestMessageRequest) -> dict:
     text = payload.content_text.strip()
-    if not text:
+    has_image = (
+        payload.attachment_kind == "image"
+        and bool(payload.attachment_base64)
+        and bool(payload.attachment_mime)
+    )
+    if not text and not has_image:
         raise HTTPException(status_code=400, detail="Message content is empty")
     if len(text) > 12000:
         text = text[:12000]
@@ -1009,7 +1036,13 @@ def create_bot_tasks_from_message(payload: BotIngestMessageRequest) -> dict:
     except PsycopgError as exc:
         raise HTTPException(status_code=500, detail=f"Database error while linking user to project: {exc}")
 
-    extracted_tasks = extract_tasks_via_openrouter(text, project.get("title") or project_title)
+    extracted_tasks = extract_tasks_via_openrouter(
+        text,
+        project.get("title") or project_title,
+        payload.attachment_kind,
+        payload.attachment_mime,
+        payload.attachment_base64,
+    )
     created_tasks = []
     for task in extracted_tasks:
         created = create_project_task(
