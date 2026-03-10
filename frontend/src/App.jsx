@@ -58,6 +58,13 @@ function toSprintDateLabel(value) {
   return dt.toLocaleDateString('ru-RU');
 }
 
+function toTimeMs(value) {
+  if (!value) return 0;
+  const dt = new Date(value);
+  const ms = dt.getTime();
+  return Number.isNaN(ms) ? 0 : ms;
+}
+
 function TaskProgress({ status }) {
   const meta = statusMeta(status);
   return (
@@ -113,10 +120,15 @@ export default function App() {
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [taskReadMap, setTaskReadMap] = useState({});
   const isTaskDetailsEditing = useMemo(
     () => Object.values(taskDetailsEditing).some(Boolean),
     [taskDetailsEditing]
   );
+
+  function taskReadStorageKey(projectId, tgId) {
+    return `vkr-task-read:${tgId}:${projectId}`;
+  }
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -248,6 +260,35 @@ export default function App() {
   }, [projects, query]);
 
   const backlogTasks = useMemo(() => tasks.filter((task) => task.sprint_id == null), [tasks]);
+
+  useEffect(() => {
+    if (!selectedProject?.id || !authState.user?.tg_id) {
+      setTaskReadMap({});
+      return;
+    }
+    const key = taskReadStorageKey(selectedProject.id, authState.user.tg_id);
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) {
+        setTaskReadMap({});
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      setTaskReadMap(parsed && typeof parsed === 'object' ? parsed : {});
+    } catch {
+      setTaskReadMap({});
+    }
+  }, [selectedProject?.id, authState.user?.tg_id]);
+
+  useEffect(() => {
+    if (!selectedProject?.id || !authState.user?.tg_id) return;
+    const key = taskReadStorageKey(selectedProject.id, authState.user.tg_id);
+    try {
+      window.localStorage.setItem(key, JSON.stringify(taskReadMap));
+    } catch {
+      // ignore localStorage failures
+    }
+  }, [taskReadMap, selectedProject?.id, authState.user?.tg_id]);
 
   async function loadBoard(projectId, tgId) {
     const apiBase = getApiBase();
@@ -424,6 +465,42 @@ export default function App() {
     }
   }
 
+  async function deleteTask(taskId, taskTitle) {
+    if (!authState.user?.tg_id || !selectedProject?.id) return;
+    const confirmed = window.confirm(`Удалить задачу "${taskTitle}"? Комментарии также будут удалены.`);
+    if (!confirmed) return;
+    try {
+      const apiBase = getApiBase();
+      const response = await fetch(
+        `${apiBase}/tasks/${encodeURIComponent(taskId)}?tg_id=${encodeURIComponent(authState.user.tg_id)}`,
+        { method: 'DELETE' }
+      );
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload?.detail || `Task delete failed ${response.status}`);
+      }
+      if (taskDetails?.id === taskId) closeTaskDetails();
+      await loadBoard(selectedProject.id, authState.user.tg_id);
+    } catch (error) {
+      setBoardError(`Не удалось удалить задачу. ${error?.message ?? ''}`.trim());
+    }
+  }
+
+  function markTaskCommentsRead(taskId, readAt) {
+    const at = toTimeMs(readAt) || Date.now();
+    setTaskReadMap((prev) => ({ ...prev, [String(taskId)]: at }));
+  }
+
+  function taskUnreadCount(task) {
+    const total = Number(task?.comment_count ?? 0);
+    if (total <= 0) return 0;
+    const backendUnread = Math.max(0, Number(task?.unread_comment_count ?? 0));
+    const lastCommentAtMs = toTimeMs(task?.last_comment_at);
+    const lastReadMs = Number(taskReadMap[String(task?.id)] ?? 0);
+    if (lastReadMs > 0 && lastCommentAtMs > 0 && lastReadMs >= lastCommentAtMs) return 0;
+    return backendUnread;
+  }
+
   function openTaskDetails(task) {
     setTaskDetails({ ...task, execution_hours: task.execution_hours ?? '' });
     setTaskDetailsEditing({
@@ -457,7 +534,22 @@ export default function App() {
         throw new Error(`Comments failed ${response.status}`);
       }
       const data = await response.json();
-      setComments(Array.isArray(data?.comments) ? data.comments : []);
+      const items = Array.isArray(data?.comments) ? data.comments : [];
+      setComments(items);
+      const lastCommentAt = items.length ? items[items.length - 1]?.created_at : null;
+      markTaskCommentsRead(taskId, lastCommentAt);
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                comment_count: items.length,
+                unread_comment_count: 0,
+                last_comment_at: lastCommentAt || task.last_comment_at
+              }
+            : task
+        )
+      );
     } catch (error) {
       setBoardError(`Не удалось загрузить комментарии. ${error?.message ?? ''}`.trim());
       setComments([]);
@@ -579,13 +671,35 @@ export default function App() {
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('text/task-id', String(task.id))}
                   >
+                    <button
+                      type="button"
+                      className="task-delete-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void deleteTask(task.id, task.title);
+                      }}
+                      aria-label="Удалить задачу"
+                      title="Удалить задачу"
+                    >
+                      🗑
+                    </button>
                     <button type="button" className="task-open" onClick={() => openTaskDetails(task)}>
                       <strong>{task.title}</strong>
                       <span>{task.description || 'Без описания'}</span>
                     </button>
                     <TaskProgress status={task.status} />
                     <div className="task-meta">
-                      Время выполнения: {task.execution_hours ? `${task.execution_hours} ч` : 'не указано'}
+                      <div className="task-meta-row">
+                        <span>Время выполнения: {task.execution_hours ? `${task.execution_hours} ч` : 'не указано'}</span>
+                      </div>
+                      <div className="task-meta-row">
+                        <span className={`task-comments ${taskUnreadCount(task) > 0 ? 'unread' : ''}`}>
+                          💬 {task.comment_count ?? 0}
+                          {taskUnreadCount(task) > 0 && (
+                            <span className="unread-badge">{taskUnreadCount(task)}</span>
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -653,13 +767,35 @@ export default function App() {
                             {sprintTasks.length === 0 && <div className="empty compact">Задач в спринте нет</div>}
                             {sprintTasks.map((task) => (
                               <article key={task.id} className="task-card">
+                                <button
+                                  type="button"
+                                  className="task-delete-btn"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void deleteTask(task.id, task.title);
+                                  }}
+                                  aria-label="Удалить задачу"
+                                  title="Удалить задачу"
+                                >
+                                  🗑
+                                </button>
                                 <button type="button" className="task-open" onClick={() => openTaskDetails(task)}>
                                   <strong>{task.title}</strong>
                                   <span>{task.description || 'Без описания'}</span>
                                 </button>
                                 <TaskProgress status={task.status} />
                                 <div className="task-meta">
-                                  Время выполнения: {task.execution_hours ? `${task.execution_hours} ч` : 'не указано'}
+                                  <div className="task-meta-row">
+                                    <span>Время выполнения: {task.execution_hours ? `${task.execution_hours} ч` : 'не указано'}</span>
+                                  </div>
+                                  <div className="task-meta-row">
+                                    <span className={`task-comments ${taskUnreadCount(task) > 0 ? 'unread' : ''}`}>
+                                      💬 {task.comment_count ?? 0}
+                                      {taskUnreadCount(task) > 0 && (
+                                        <span className="unread-badge">{taskUnreadCount(task)}</span>
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
                               </article>
                             ))}

@@ -372,6 +372,20 @@ def ensure_sprint_tables(cur) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_tasks_project_sprint ON tasks(project_id, sprint_id, updated_at DESC);")
 
 
+def ensure_task_comment_reads_table(cur) -> None:
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS task_comment_reads (
+          task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+          user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          last_read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          PRIMARY KEY (task_id, user_id)
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_task_comment_reads_user ON task_comment_reads(user_id, task_id);")
+
+
 def ensure_chat_project(chat_id: int, chat_type: str | None, title: str | None) -> dict:
     normalized_title = (title or "Новый проект").strip() or "Новый проект"
     chat_instance = str(chat_id)
@@ -592,6 +606,7 @@ def list_project_tasks(project_id: int, tg_id: int) -> list[dict]:
         with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 ensure_sprint_tables(cur)
+                ensure_task_comment_reads_table(cur)
                 user_id = get_user_id_by_tg_id(cur, tg_id)
                 ensure_project_member(cur, project_id, user_id)
                 cur.execute(
@@ -604,13 +619,29 @@ def list_project_tasks(project_id: int, tg_id: int) -> list[dict]:
                       t.description,
                       t.status,
                       t.execution_hours,
+                      COALESCE(cs.comment_count, 0) AS comment_count,
+                      cs.last_comment_at,
+                      COALESCE(cs.unread_comment_count, 0) AS unread_comment_count,
                       t.created_at,
                       t.updated_at
                     FROM tasks t
+                    LEFT JOIN LATERAL (
+                      SELECT
+                        COUNT(*)::INT AS comment_count,
+                        MAX(c.created_at) AS last_comment_at,
+                        COUNT(*) FILTER (
+                          WHERE c.created_at > COALESCE(tcr.last_read_at, TO_TIMESTAMP(0))
+                        )::INT AS unread_comment_count
+                      FROM comments c
+                      LEFT JOIN task_comment_reads tcr
+                        ON tcr.task_id = t.id
+                       AND tcr.user_id = %s
+                      WHERE c.task_id = t.id
+                    ) cs ON TRUE
                     WHERE t.project_id = %s
                     ORDER BY t.updated_at DESC, t.id DESC;
                     """,
-                    (project_id,),
+                    (user_id, project_id),
                 )
                 return cur.fetchall()
     except RuntimeError as exc:
@@ -1069,7 +1100,7 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
         raise HTTPException(status_code=500, detail=f"Database error while updating task: {exc}")
 
 
-def list_task_comments(task_id: int, tg_id: int) -> list[dict]:
+def delete_task(task_id: int, tg_id: int) -> dict:
     try:
         with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
@@ -1080,6 +1111,39 @@ def list_task_comments(task_id: int, tg_id: int) -> list[dict]:
                 if not task_row:
                     raise HTTPException(status_code=404, detail="Task not found")
                 ensure_project_member(cur, task_row["project_id"], user_id)
+                cur.execute("DELETE FROM tasks WHERE id = %s RETURNING id;", (task_id,))
+                deleted = cur.fetchone()
+            conn.commit()
+            return deleted or {"id": task_id}
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while deleting task: {exc}")
+
+
+def list_task_comments(task_id: int, tg_id: int) -> list[dict]:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                ensure_task_comment_reads_table(cur)
+                user_id = get_user_id_by_tg_id(cur, tg_id)
+                cur.execute("SELECT project_id FROM tasks WHERE id = %s LIMIT 1;", (task_id,))
+                task_row = cur.fetchone()
+                if not task_row:
+                    raise HTTPException(status_code=404, detail="Task not found")
+                ensure_project_member(cur, task_row["project_id"], user_id)
+                cur.execute(
+                    """
+                    INSERT INTO task_comment_reads (task_id, user_id, last_read_at)
+                    VALUES (%s, %s, NOW())
+                    ON CONFLICT (task_id, user_id)
+                    DO UPDATE SET last_read_at = EXCLUDED.last_read_at;
+                    """,
+                    (task_id, user_id),
+                )
                 cur.execute(
                     """
                     SELECT
@@ -1179,6 +1243,12 @@ def project_create_task(project_id: int, payload: TaskCreateRequest) -> dict:
 @app.patch("/tasks/{task_id}")
 def patch_task(task_id: int, payload: TaskUpdateRequest) -> dict:
     return {"ok": True, "task": update_task(task_id, payload)}
+
+
+@app.delete("/tasks/{task_id}")
+def remove_task(task_id: int, tg_id: int) -> dict:
+    deleted = delete_task(task_id, tg_id)
+    return {"ok": True, "deleted_task_id": deleted["id"]}
 
 
 @app.get("/tasks/{task_id}/comments")

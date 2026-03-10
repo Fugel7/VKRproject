@@ -360,6 +360,10 @@ body {
   padding: 10px;
 }
 
+.task-card {
+  position: relative;
+}
+
 .sprint-card {
   position: relative;
   padding: 14px;
@@ -379,6 +383,24 @@ body {
   color: #b91c1c;
   font-size: 14px;
   cursor: pointer;
+}
+
+.task-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: #ffe4e6;
+  color: #b91c1c;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.task-delete-btn:hover {
+  background: #fecdd3;
 }
 
 .sprint-delete-btn:hover {
@@ -408,6 +430,10 @@ body {
 .sprint-header span {
   color: var(--muted);
   font-size: 12px;
+}
+
+.task-card .task-open {
+  padding-right: 34px;
 }
 
 .progress-wrap {
@@ -447,6 +473,39 @@ body {
   font-size: 12px;
   color: var(--muted);
   margin-top: 8px;
+}
+
+.task-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.task-comments {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-comments.unread {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.unread-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #d7efff;
+  color: #0b5f7d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
 }
 
 .small-btn {
