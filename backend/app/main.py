@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 import hmac
 import json
 import os
@@ -860,26 +860,35 @@ def _normalize_ai_tasks(items: list[dict]) -> list[dict]:
     return normalized[:15]
 
 
-def extract_tasks_via_openrouter(content_text: str) -> list[dict]:
+def extract_tasks_via_openrouter(content_text: str, project_title: str) -> list[dict]:
     api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if not api_key:
         raise HTTPException(status_code=503, detail="OPENROUTER_API_KEY is not configured")
     model = os.getenv("OPENROUTER_MODEL", "openrouter/free").strip() or "openrouter/free"
     prompt = (
-        "Извлеки задачи из пользовательского сообщения. "
-        "Верни только JSON-объект формата: "
+        "You extract project tasks from user messages for a task tracker. "
+        "Return ONLY one JSON object with exact schema: "
         '{"tasks":[{"title":"string","description":"string","execution_hours":number|null,"status":"NEW|IN_PROGRESS|DONE"}]}. '
-        "Не добавляй markdown, пояснения и комментарии. "
-        "Если задач нет, верни {\"tasks\":[]}. "
-        "Оцени execution_hours реалистично."
+        "Rules: "
+        "1) Include ONLY tasks clearly related to the current project context. "
+        "2) Ignore personal, household, off-topic, joke, or unrelated requests. "
+        "3) If a message mixes related and unrelated items, keep only related items. "
+        "4) If no related tasks exist, return {\"tasks\":[]}. "
+        "5) title and description must be in Russian. If source text is another language, translate to Russian. "
+        "6) Keep titles short and specific. "
+        "7) execution_hours should be realistic integer estimate or null if uncertain. "
+        "8) Do not output markdown or any extra text."
     )
     request_body = {
         "model": model,
         "messages": [
             {"role": "system", "content": prompt},
-            {"role": "user", "content": content_text},
+            {
+                "role": "user",
+                "content": f"Project title: {project_title}\\n\\nUser message:\\n{content_text}",
+            },
         ],
-        "temperature": 0.2,
+        "temperature": 0.1,
     }
     req = Request(
         url="https://openrouter.ai/api/v1/chat/completions",
@@ -954,7 +963,7 @@ def create_bot_tasks_from_message(payload: BotIngestMessageRequest) -> dict:
     except PsycopgError as exc:
         raise HTTPException(status_code=500, detail=f"Database error while linking user to project: {exc}")
 
-    extracted_tasks = extract_tasks_via_openrouter(text)
+    extracted_tasks = extract_tasks_via_openrouter(text, project.get("title") or project_title)
     created_tasks = []
     for task in extracted_tasks:
         created = create_project_task(
@@ -1251,3 +1260,4 @@ def bot_ingest_message(payload: BotIngestMessageRequest, x_bot_token: str | None
 def delete_project(project_id: int, tg_id: int) -> dict:
     deleted = delete_project_by_tg_id(project_id, tg_id)
     return {"ok": True, "deleted_project_id": deleted["id"]}
+
