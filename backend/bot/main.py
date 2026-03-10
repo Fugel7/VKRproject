@@ -1,8 +1,8 @@
 import asyncio
-import base64
 import io
 import json
 import os
+import tempfile
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -10,6 +10,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import Command, CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 from docx import Document
+from faster_whisper import WhisperModel
 from pypdf import PdfReader
 
 
@@ -136,6 +137,43 @@ async def download_telegram_file_bytes(bot: Bot, file_id: str) -> bytes:
     return stream.getvalue()
 
 
+_whisper_model: WhisperModel | None = None
+
+
+def get_whisper_model() -> WhisperModel:
+    global _whisper_model
+    if _whisper_model is None:
+        model_name = os.getenv("WHISPER_MODEL", "tiny").strip() or "tiny"
+        device = os.getenv("WHISPER_DEVICE", "cpu").strip() or "cpu"
+        compute_type = os.getenv("WHISPER_COMPUTE_TYPE", "int8").strip() or "int8"
+        _whisper_model = WhisperModel(model_name, device=device, compute_type=compute_type)
+    return _whisper_model
+
+
+def transcribe_media_bytes(content: bytes, suffix: str) -> str:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+        temp_file.write(content)
+        temp_path = temp_file.name
+    try:
+        model = get_whisper_model()
+        segments, _info = model.transcribe(
+            temp_path,
+            vad_filter=True,
+            beam_size=1,
+        )
+        chunks = []
+        for segment in segments:
+            text = (segment.text or "").strip()
+            if text:
+                chunks.append(text)
+        return " ".join(chunks).strip()
+    finally:
+        try:
+            os.remove(temp_path)
+        except OSError:
+            pass
+
+
 async def main() -> None:
     token = get_required_env("TELEGRAM_BOT_TOKEN")
     web_app_url = get_required_env("WEB_APP_URL")
@@ -204,6 +242,7 @@ async def main() -> None:
             source_type = "audio"
 
         document_text = ""
+        media_text = ""
         attachment_kind = None
         attachment_mime = None
         attachment_base64 = None
@@ -231,16 +270,21 @@ async def main() -> None:
                         "Пока поддерживаются файлы TXT/PDF/DOCX. "
                         "Для других форматов добавьте текст с задачами в подпись."
                     )
+            elif message.voice:
+                source_type = "voice"
+                voice_bytes = await download_telegram_file_bytes(bot, message.voice.file_id)
+                media_text = transcribe_media_bytes(voice_bytes, ".ogg")
+            elif message.audio:
+                source_type = "audio"
+                audio_bytes = await download_telegram_file_bytes(bot, message.audio.file_id)
+                media_text = transcribe_media_bytes(audio_bytes, ".mp3")
+            elif message.video:
+                source_type = "video"
+                video_bytes = await download_telegram_file_bytes(bot, message.video.file_id)
+                media_text = transcribe_media_bytes(video_bytes, ".mp4")
             elif message.photo:
                 source_type = "image"
-                best_photo = message.photo[-1]
-                image_bytes = await download_telegram_file_bytes(bot, best_photo.file_id)
-                if len(image_bytes) > 4 * 1024 * 1024:
-                    await message.reply("Изображение слишком большое. Отправьте файл до 4 МБ.")
-                    return
-                attachment_kind = "image"
-                attachment_mime = "image/jpeg"
-                attachment_base64 = base64.b64encode(image_bytes).decode("ascii")
+                # For image messages we only use caption text to keep pipeline free and stable.
         except Exception as exc:  # noqa: BLE001
             await message.reply(f"Не удалось прочитать вложение: {exc}")
             return
@@ -250,12 +294,14 @@ async def main() -> None:
             text_parts.append(base_text)
         if document_text.strip():
             text_parts.append("Текст из файла:\n" + document_text.strip())
+        if media_text.strip():
+            text_parts.append("Текст из аудио/видео:\n" + media_text.strip())
         text = "\n\n".join(text_parts).strip()
 
-        if not text and not attachment_base64:
+        if not text:
             await message.reply(
                 "Не удалось получить данные для анализа. "
-                "Добавьте текст/подпись или отправьте файл TXT/PDF/DOCX, либо изображение."
+                "Добавьте текст/подпись или отправьте файл TXT/PDF/DOCX, либо голосовое/видео."
             )
             return
 

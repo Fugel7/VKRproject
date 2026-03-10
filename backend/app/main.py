@@ -904,7 +904,13 @@ def extract_tasks_via_openrouter(
     api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if not api_key:
         raise HTTPException(status_code=503, detail="OPENROUTER_API_KEY is not configured")
-    model = os.getenv("OPENROUTER_MODEL", "openrouter/free").strip() or "openrouter/free"
+    text_model = os.getenv("OPENROUTER_MODEL", "openrouter/free").strip() or "openrouter/free"
+    vision_model = os.getenv("OPENROUTER_VISION_MODEL", "").strip() or text_model
+    fallback_models = [
+        item.strip()
+        for item in os.getenv("OPENROUTER_FALLBACK_MODELS", "").split(",")
+        if item.strip()
+    ]
     prompt = (
         "You extract project tasks from user messages for a task tracker. "
         "Return ONLY one JSON object with exact schema: "
@@ -938,22 +944,27 @@ def extract_tasks_via_openrouter(
             },
         ]
 
-    def build_request_body(use_system_prompt: bool) -> dict:
+    def build_request_body(use_system_prompt: bool, model_name: str, use_image: bool) -> dict:
+        current_user_content: str | list[dict]
+        if use_image:
+            current_user_content = user_content
+        else:
+            current_user_content = user_text
         if use_system_prompt:
             return {
-                "model": model,
+                "model": model_name,
                 "messages": [
                     {"role": "system", "content": prompt},
-                    {"role": "user", "content": user_content},
+                    {"role": "user", "content": current_user_content},
                 ],
                 "temperature": 0.1,
             }
-        if isinstance(user_content, list):
-            merged_content = [{"type": "text", "text": prompt}] + user_content
+        if isinstance(current_user_content, list):
+            merged_content = [{"type": "text", "text": prompt}] + current_user_content
         else:
-            merged_content = f"{prompt}\n\n{user_content}"
+            merged_content = f"{prompt}\n\n{current_user_content}"
         return {
-            "model": model,
+            "model": model_name,
             "messages": [{"role": "user", "content": merged_content}],
             "temperature": 0.1,
         }
@@ -971,28 +982,49 @@ def extract_tasks_via_openrouter(
         with urlopen(req, timeout=45) as response:
             return json.loads(response.read().decode("utf-8"))
 
-    try:
-        parsed = send_request(build_request_body(use_system_prompt=True))
-    except HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        if exc.code == 400 and "Developer instruction is not enabled" in body:
+    def try_models(use_image: bool, models: list[str]) -> tuple[dict | None, str | None]:
+        last_error: str | None = None
+        for model_name in models:
             try:
-                parsed = send_request(build_request_body(use_system_prompt=False))
-            except HTTPError as inner_exc:
-                inner_body = inner_exc.read().decode("utf-8", errors="replace")
-                raise HTTPException(
-                    status_code=502, detail=f"OpenRouter error {inner_exc.code}: {inner_body}"
-                ) from inner_exc
-            except URLError as inner_exc:
-                raise HTTPException(status_code=502, detail=f"OpenRouter is unreachable: {inner_exc}") from inner_exc
-            except json.JSONDecodeError as inner_exc:
-                raise HTTPException(status_code=502, detail="OpenRouter response is not valid JSON") from inner_exc
-        else:
-            raise HTTPException(status_code=502, detail=f"OpenRouter error {exc.code}: {body}") from exc
-    except URLError as exc:
-        raise HTTPException(status_code=502, detail=f"OpenRouter is unreachable: {exc}") from exc
-    except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=502, detail="OpenRouter response is not valid JSON") from exc
+                return send_request(build_request_body(use_system_prompt=True, model_name=model_name, use_image=use_image)), None
+            except HTTPError as exc:
+                body = exc.read().decode("utf-8", errors="replace")
+                if exc.code == 400 and "Developer instruction is not enabled" in body:
+                    try:
+                        return (
+                            send_request(
+                                build_request_body(use_system_prompt=False, model_name=model_name, use_image=use_image)
+                            ),
+                            None,
+                        )
+                    except HTTPError as inner_exc:
+                        inner_body = inner_exc.read().decode("utf-8", errors="replace")
+                        last_error = f"OpenRouter error {inner_exc.code}: {inner_body}"
+                        continue
+                    except URLError as inner_exc:
+                        last_error = f"OpenRouter is unreachable: {inner_exc}"
+                        continue
+                    except json.JSONDecodeError:
+                        last_error = "OpenRouter response is not valid JSON"
+                        continue
+                last_error = f"OpenRouter error {exc.code}: {body}"
+                continue
+            except URLError as exc:
+                last_error = f"OpenRouter is unreachable: {exc}"
+                continue
+            except json.JSONDecodeError:
+                last_error = "OpenRouter response is not valid JSON"
+                continue
+        return None, last_error
+
+    has_image = isinstance(user_content, list)
+    model_candidates = [vision_model] + [m for m in fallback_models if m != vision_model]
+    parsed, request_error = try_models(use_image=has_image, models=model_candidates)
+    if parsed is None and has_image and content_text.strip():
+        text_candidates = [text_model] + [m for m in fallback_models if m != text_model]
+        parsed, request_error = try_models(use_image=False, models=text_candidates)
+    if parsed is None:
+        raise HTTPException(status_code=502, detail=request_error or "OpenRouter request failed")
 
     error_payload = parsed.get("error")
     if isinstance(error_payload, dict):
