@@ -873,11 +873,14 @@ def extract_tasks_via_openrouter(content_text: str, project_title: str) -> list[
         "1) Include ONLY tasks clearly related to the current project context. "
         "2) Ignore personal, household, off-topic, joke, or unrelated requests. "
         "3) If a message mixes related and unrelated items, keep only related items. "
-        "4) If no related tasks exist, return {\"tasks\":[]}. "
-        "5) title and description must be in Russian. If source text is another language, translate to Russian. "
-        "6) Keep titles short and specific. "
-        "7) execution_hours should be realistic integer estimate or null if uncertain. "
-        "8) Do not output markdown or any extra text."
+        "4) If project context is weak or generic, treat software/product tasks as related "
+        "(site/app/bot/frontend/backend/api/design/content/analytics/integration/testing). "
+        "5) If no related tasks exist, return {\"tasks\":[]}. "
+        "6) In mixed messages like 'make tea and add checkout page', keep only the software task. "
+        "7) title and description must be in Russian. If source text is another language, translate to Russian. "
+        "8) Keep titles short and specific. "
+        "9) execution_hours should be realistic integer estimate or null if uncertain. "
+        "10) Do not output markdown or any extra text."
     )
     request_body = {
         "model": model,
@@ -910,16 +913,28 @@ def extract_tasks_via_openrouter(content_text: str, project_title: str) -> list[
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=502, detail="OpenRouter response is not valid JSON") from exc
 
+    error_payload = parsed.get("error")
+    if isinstance(error_payload, dict):
+        error_message = str(error_payload.get("message") or "").strip()
+        if error_message:
+            raise HTTPException(status_code=502, detail=f"OpenRouter error: {error_message}")
+        raise HTTPException(status_code=502, detail="OpenRouter returned an error payload")
+
     choices = parsed.get("choices")
     if not isinstance(choices, list) or not choices:
-        raise HTTPException(status_code=502, detail="OpenRouter returned no choices")
+        return []
     message = choices[0].get("message") if isinstance(choices[0], dict) else None
     content = message.get("content") if isinstance(message, dict) else None
     content_text_raw = _extract_openrouter_text(content)
-    payload = _extract_json_object(content_text_raw)
+    if not content_text_raw.strip():
+        return []
+    try:
+        payload = _extract_json_object(content_text_raw)
+    except HTTPException:
+        return []
     tasks = payload.get("tasks") if isinstance(payload, dict) else None
     if not isinstance(tasks, list):
-        raise HTTPException(status_code=502, detail="OpenRouter JSON has no tasks array")
+        return []
     return _normalize_ai_tasks(tasks)
 
 
