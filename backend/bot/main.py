@@ -175,6 +175,47 @@ def transcribe_media_bytes(content: bytes, suffix: str) -> str:
             pass
 
 
+def should_attempt_task_extraction(text: str) -> bool:
+    lowered = (text or "").strip().lower()
+    if not lowered:
+        return False
+    action_markers = [
+        "сделай",
+        "сделать",
+        "добавь",
+        "добавить",
+        "исправь",
+        "исправить",
+        "поправь",
+        "поправить",
+        "измени",
+        "изменить",
+        "обнови",
+        "обновить",
+        "удали",
+        "удалить",
+        "создай",
+        "создать",
+        "реализуй",
+        "реализовать",
+        "внедри",
+        "внедрить",
+        "настрой",
+        "настроить",
+        "протестируй",
+        "протестировать",
+        "почини",
+        "починить",
+        "оптимизируй",
+        "оптимизировать",
+        "нужно",
+        "надо",
+        "необходимо",
+        "требуется",
+    ]
+    return any(marker in lowered for marker in action_markers)
+
+
 async def main() -> None:
     token = get_required_env("TELEGRAM_BOT_TOKEN")
     web_app_url = get_required_env("WEB_APP_URL")
@@ -304,6 +345,11 @@ async def main() -> None:
                 "Не удалось получить данные для анализа. "
                 "Добавьте текст/подпись или отправьте файл TXT/PDF/DOCX, либо голосовое/видео."
             )
+            return
+
+        # For regular text/caption/image we only react to clearly actionable requests.
+        has_file_or_media = bool(message.document or message.voice or message.audio or message.video)
+        if not has_file_or_media and not should_attempt_task_extraction(text):
             return
 
         payload = {
