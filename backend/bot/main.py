@@ -132,7 +132,7 @@ def extract_text_from_docx_bytes(content: bytes) -> str:
 async def download_telegram_file_bytes(bot: Bot, file_id: str) -> bytes:
     file_info = await bot.get_file(file_id)
     stream = io.BytesIO()
-    await bot.download(file_info.file_path, destination=stream)
+    await bot.download(file_info, destination=stream)
     return stream.getvalue()
 
 
