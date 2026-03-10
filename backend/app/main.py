@@ -938,29 +938,57 @@ def extract_tasks_via_openrouter(
             },
         ]
 
-    request_body = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": user_content},
-        ],
-        "temperature": 0.1,
-    }
-    req = Request(
-        url="https://openrouter.ai/api/v1/chat/completions",
-        data=json.dumps(request_body).encode("utf-8"),
-        method="POST",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-    )
-    try:
+    def build_request_body(use_system_prompt: bool) -> dict:
+        if use_system_prompt:
+            return {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": user_content},
+                ],
+                "temperature": 0.1,
+            }
+        if isinstance(user_content, list):
+            merged_content = [{"type": "text", "text": prompt}] + user_content
+        else:
+            merged_content = f"{prompt}\n\n{user_content}"
+        return {
+            "model": model,
+            "messages": [{"role": "user", "content": merged_content}],
+            "temperature": 0.1,
+        }
+
+    def send_request(request_body: dict) -> dict:
+        req = Request(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            data=json.dumps(request_body).encode("utf-8"),
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+        )
         with urlopen(req, timeout=45) as response:
-            parsed = json.loads(response.read().decode("utf-8"))
+            return json.loads(response.read().decode("utf-8"))
+
+    try:
+        parsed = send_request(build_request_body(use_system_prompt=True))
     except HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
-        raise HTTPException(status_code=502, detail=f"OpenRouter error {exc.code}: {body}") from exc
+        if exc.code == 400 and "Developer instruction is not enabled" in body:
+            try:
+                parsed = send_request(build_request_body(use_system_prompt=False))
+            except HTTPError as inner_exc:
+                inner_body = inner_exc.read().decode("utf-8", errors="replace")
+                raise HTTPException(
+                    status_code=502, detail=f"OpenRouter error {inner_exc.code}: {inner_body}"
+                ) from inner_exc
+            except URLError as inner_exc:
+                raise HTTPException(status_code=502, detail=f"OpenRouter is unreachable: {inner_exc}") from inner_exc
+            except json.JSONDecodeError as inner_exc:
+                raise HTTPException(status_code=502, detail="OpenRouter response is not valid JSON") from inner_exc
+        else:
+            raise HTTPException(status_code=502, detail=f"OpenRouter error {exc.code}: {body}") from exc
     except URLError as exc:
         raise HTTPException(status_code=502, detail=f"OpenRouter is unreachable: {exc}") from exc
     except json.JSONDecodeError as exc:
