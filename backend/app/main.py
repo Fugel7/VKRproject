@@ -2,6 +2,7 @@
 import hmac
 import json
 import os
+import re
 import time
 import uuid
 from urllib.error import HTTPError, URLError
@@ -894,6 +895,69 @@ def _normalize_ai_tasks(items: list[dict]) -> list[dict]:
     return normalized[:15]
 
 
+def _split_text_to_clauses(text: str) -> list[str]:
+    rough_parts = re.split(r"[\n\r;,.!?]+", text or "")
+    clauses: list[str] = []
+    for part in rough_parts:
+        if not part.strip():
+            continue
+        subparts = re.split(r"\b(?:и|а|но|затем|потом)\b", part, flags=re.IGNORECASE)
+        for subpart in subparts:
+            cleaned = subpart.strip(" -:\t")
+            if cleaned:
+                clauses.append(cleaned)
+    return clauses
+
+
+def _extract_tasks_by_rules(text: str) -> list[dict]:
+    action_markers = (
+        "сделай", "сделать", "добавь", "добавить", "исправь", "исправить", "поправь", "поправить",
+        "измени", "изменить", "обнови", "обновить", "удали", "удалить", "создай", "создать",
+        "реализуй", "реализовать", "настрой", "настроить", "почини", "починить", "нужно", "надо",
+        "необходимо", "требуется",
+    )
+    project_markers = (
+        "страниц", "карточк", "сайт", "лендинг", "интерфейс", "ui", "ux", "верстк", "макет",
+        "фронтенд", "frontend", "бэкенд", "backend", "api", "endpoint", "роут", "кнопк", "форма",
+        "модал", "таблиц", "база", "проект", "задач", "баг", "ошибк", "фильтр", "поиск", "авторизац",
+        "товар",
+    )
+    tasks: list[dict] = []
+    for clause in _split_text_to_clauses(text):
+        lowered = clause.lower()
+        has_action = any(marker in lowered for marker in action_markers)
+        has_project = any(marker in lowered for marker in project_markers)
+        if not has_action:
+            continue
+        if not has_project:
+            continue
+
+        title = re.sub(
+            r"^\s*(?:надо(?: бы)?|нужно|необходимо|требуется|не забыть бы|пожалуйста)\s+",
+            "",
+            clause,
+            flags=re.IGNORECASE,
+        )
+        title = re.sub(
+            r"^\s*(?:сделай|сделать|добавь|добавить|исправь|исправить|измени|изменить|обнови|обновить|создай|создать|удали|удалить|реализуй|реализовать|настрой|настроить|почини|починить)\s+",
+            "",
+            title,
+            flags=re.IGNORECASE,
+        ).strip(" .,:;-")
+        if not title:
+            continue
+        if len(title) > 180:
+            title = title[:180].rstrip()
+
+        tasks.append(
+            {
+                "title": title[:1].upper() + title[1:] if title else title,
+                "description": clause.strip(),
+                "execution_hours": None,
+                "status": "NEW",
+            }
+        )
+    return tasks[:15]
 def extract_tasks_via_openrouter(
     content_text: str,
     project_title: str,
@@ -1103,6 +1167,8 @@ def create_bot_tasks_from_message(payload: BotIngestMessageRequest) -> dict:
         payload.attachment_mime,
         payload.attachment_base64,
     )
+    if not extracted_tasks:
+        extracted_tasks = _extract_tasks_by_rules(text)
     created_tasks = []
     for task in extracted_tasks:
         created = create_project_task(
@@ -1438,4 +1504,9 @@ def bot_ingest_message(payload: BotIngestMessageRequest, x_bot_token: str | None
 def delete_project(project_id: int, tg_id: int) -> dict:
     deleted = delete_project_by_tg_id(project_id, tg_id)
     return {"ok": True, "deleted_project_id": deleted["id"]}
+
+
+
+
+
 
