@@ -390,6 +390,68 @@ def ensure_task_comment_reads_table(cur) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_task_comment_reads_user ON task_comment_reads(user_id, task_id);")
 
 
+def ensure_task_audit_table(cur) -> None:
+    cur.execute(
+        """
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_event_type') THEN
+            CREATE TYPE audit_event_type AS ENUM (
+              'CREATE',
+              'UPDATE',
+              'STATUS_CHANGE',
+              'ASSIGNEE_CHANGE',
+              'DEADLINE_CHANGE',
+              'COMMENT_ADD',
+              'ATTACH_ADD'
+            );
+          END IF;
+        END
+        $$;
+        """
+    )
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS task_audit_log (
+          id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+          actor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+          event_type audit_event_type NOT NULL,
+          field TEXT,
+          old_value JSONB,
+          new_value JSONB,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_task_audit_task_created ON task_audit_log(task_id, created_at DESC);")
+
+
+def add_task_audit_entry(
+    cur,
+    task_id: int,
+    actor_id: int,
+    event_type: str,
+    field: str | None,
+    old_value,
+    new_value,
+) -> None:
+    cur.execute(
+        """
+        INSERT INTO task_audit_log (task_id, actor_id, event_type, field, old_value, new_value)
+        VALUES (%s, %s, %s::audit_event_type, %s, %s::jsonb, %s::jsonb);
+        """,
+        (
+            task_id,
+            actor_id,
+            event_type,
+            field,
+            json.dumps(old_value, ensure_ascii=False) if old_value is not None else None,
+            json.dumps(new_value, ensure_ascii=False) if new_value is not None else None,
+        ),
+    )
+
+
 def ensure_chat_project(chat_id: int, chat_type: str | None, title: str | None) -> dict:
     normalized_title = (title or "Новый проект").strip() or "Новый проект"
     chat_instance = str(chat_id)
@@ -787,6 +849,7 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
         with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 ensure_sprint_tables(cur)
+                ensure_task_audit_table(cur)
                 user_id = get_user_id_by_tg_id(cur, payload.tg_id)
                 ensure_project_member(cur, project_id, user_id)
                 if payload.sprint_id is not None:
@@ -816,6 +879,21 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
                     ),
                 )
                 task = cur.fetchone()
+                add_task_audit_entry(
+                    cur,
+                    task_id=task["id"],
+                    actor_id=user_id,
+                    event_type="CREATE",
+                    field=None,
+                    old_value=None,
+                    new_value={
+                        "title": task["title"],
+                        "description": task["description"],
+                        "status": task["status"],
+                        "execution_hours": task["execution_hours"],
+                        "sprint_id": task["sprint_id"],
+                    },
+                )
             conn.commit()
             return task
     except RuntimeError as exc:
@@ -1211,12 +1289,21 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
         with connect(get_database_url()) as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 ensure_sprint_tables(cur)
+                ensure_task_audit_table(cur)
                 user_id = get_user_id_by_tg_id(cur, payload.tg_id)
-                cur.execute("SELECT id, project_id FROM tasks WHERE id = %s LIMIT 1;", (task_id,))
-                task_row = cur.fetchone()
-                if not task_row:
+                cur.execute(
+                    """
+                    SELECT id, project_id, title, description, status, execution_hours, sprint_id
+                    FROM tasks
+                    WHERE id = %s
+                    LIMIT 1;
+                    """,
+                    (task_id,),
+                )
+                before = cur.fetchone()
+                if not before:
                     raise HTTPException(status_code=404, detail="Task not found")
-                project_id = task_row["project_id"]
+                project_id = before["project_id"]
                 ensure_project_member(cur, project_id, user_id)
                 if payload.sprint_id is not None:
                     cur.execute(
@@ -1249,6 +1336,26 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
                     ),
                 )
                 updated = cur.fetchone()
+                if not updated:
+                    raise HTTPException(status_code=404, detail="Task not found")
+                changed_fields = [
+                    ("title", before["title"], updated["title"], "UPDATE"),
+                    ("description", before["description"], updated["description"], "UPDATE"),
+                    ("execution_hours", before["execution_hours"], updated["execution_hours"], "UPDATE"),
+                    ("sprint_id", before["sprint_id"], updated["sprint_id"], "UPDATE"),
+                    ("status", before["status"], updated["status"], "STATUS_CHANGE"),
+                ]
+                for field, old_val, new_val, event_type in changed_fields:
+                    if old_val != new_val:
+                        add_task_audit_entry(
+                            cur,
+                            task_id=task_id,
+                            actor_id=user_id,
+                            event_type=event_type,
+                            field=field,
+                            old_value=old_val,
+                            new_value=new_val,
+                        )
             conn.commit()
             return updated
     except RuntimeError as exc:
@@ -1280,6 +1387,48 @@ def delete_task(task_id: int, tg_id: int) -> dict:
         raise
     except PsycopgError as exc:
         raise HTTPException(status_code=500, detail=f"Database error while deleting task: {exc}")
+
+
+def list_task_history(task_id: int, tg_id: int) -> list[dict]:
+    try:
+        with connect(get_database_url()) as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                ensure_sprint_tables(cur)
+                ensure_task_audit_table(cur)
+                user_id = get_user_id_by_tg_id(cur, tg_id)
+                cur.execute("SELECT project_id FROM tasks WHERE id = %s LIMIT 1;", (task_id,))
+                task_row = cur.fetchone()
+                if not task_row:
+                    raise HTTPException(status_code=404, detail="Task not found")
+                ensure_project_member(cur, task_row["project_id"], user_id)
+                cur.execute(
+                    """
+                    SELECT
+                      l.id,
+                      l.task_id,
+                      l.event_type,
+                      l.field,
+                      l.old_value,
+                      l.new_value,
+                      l.created_at,
+                      u.id AS actor_id,
+                      u.first_name,
+                      u.last_name,
+                      u.username
+                    FROM task_audit_log l
+                    JOIN users u ON u.id = l.actor_id
+                    WHERE l.task_id = %s
+                    ORDER BY l.created_at DESC, l.id DESC;
+                    """,
+                    (task_id,),
+                )
+                return cur.fetchall()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except HTTPException:
+        raise
+    except PsycopgError as exc:
+        raise HTTPException(status_code=500, detail=f"Database error while loading task history: {exc}")
 
 
 def list_task_comments(task_id: int, tg_id: int) -> list[dict]:
@@ -1413,6 +1562,11 @@ def remove_task(task_id: int, tg_id: int) -> dict:
 @app.get("/tasks/{task_id}/comments")
 def task_comments(task_id: int, tg_id: int) -> dict:
     return {"ok": True, "comments": list_task_comments(task_id, tg_id)}
+
+
+@app.get("/tasks/{task_id}/history")
+def task_history(task_id: int, tg_id: int) -> dict:
+    return {"ok": True, "history": list_task_history(task_id, tg_id)}
 
 
 @app.post("/tasks/{task_id}/comments")

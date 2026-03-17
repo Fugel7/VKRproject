@@ -51,6 +51,30 @@ function toDeadlineLabel(dateLike) {
   });
 }
 
+function historyEventLabel(eventType) {
+  if (eventType === 'CREATE') return 'Создание задачи';
+  if (eventType === 'STATUS_CHANGE') return 'Изменение статуса';
+  return 'Изменение задачи';
+}
+
+function historyFieldLabel(field) {
+  if (field === 'title') return 'Название';
+  if (field === 'description') return 'Описание';
+  if (field === 'status') return 'Статус';
+  if (field === 'execution_hours') return 'Время выполнения';
+  if (field === 'sprint_id') return 'Спринт';
+  return field || 'Поле';
+}
+
+function historyValueLabel(value, field) {
+  if (value == null || value === '') return '—';
+  if (field === 'status' && typeof value === 'string') return statusMeta(value).label;
+  if (field === 'execution_hours') return `${value} ч`;
+  if (field === 'sprint_id') return value ? `#${value}` : 'Без спринта';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
 function toSprintDateLabel(value) {
   if (!value) return '—';
   const dt = new Date(`${value}T00:00:00`);
@@ -120,6 +144,8 @@ export default function App() {
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [taskHistory, setTaskHistory] = useState([]);
+  const [taskHistoryLoading, setTaskHistoryLoading] = useState(false);
   const [taskReadMap, setTaskReadMap] = useState({});
   const isTaskDetailsEditing = useMemo(
     () => Object.values(taskDetailsEditing).some(Boolean),
@@ -511,6 +537,7 @@ export default function App() {
     });
     setCommentText('');
     void loadTaskComments(task.id);
+    void loadTaskHistory(task.id);
   }
 
   function closeTaskDetails() {
@@ -522,6 +549,7 @@ export default function App() {
       execution_hours: false
     });
     setCommentText('');
+    setTaskHistory([]);
   }
 
   async function loadTaskComments(taskId) {
@@ -555,6 +583,25 @@ export default function App() {
       setComments([]);
     } finally {
       setCommentsLoading(false);
+    }
+  }
+
+  async function loadTaskHistory(taskId) {
+    if (!authState.user?.tg_id) return;
+    setTaskHistoryLoading(true);
+    try {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/tasks/${taskId}/history?tg_id=${encodeURIComponent(authState.user.tg_id)}`);
+      if (!response.ok) {
+        throw new Error(`History failed ${response.status}`);
+      }
+      const data = await response.json();
+      setTaskHistory(Array.isArray(data?.history) ? data.history : []);
+    } catch (error) {
+      setBoardError(`Не удалось загрузить историю изменений. ${error?.message ?? ''}`.trim());
+      setTaskHistory([]);
+    } finally {
+      setTaskHistoryLoading(false);
     }
   }
 
@@ -1054,6 +1101,42 @@ export default function App() {
                   </button>
                 )}
               </form>
+
+              <h3>История изменений</h3>
+              <div className="history-list">
+                {taskHistoryLoading && <div className="empty compact">Загружаем историю...</div>}
+                {!taskHistoryLoading && taskHistory.length === 0 && (
+                  <div className="empty compact">Изменений пока нет</div>
+                )}
+                {!taskHistoryLoading &&
+                  taskHistory.map((item) => {
+                    const actorName =
+                      [item.first_name, item.last_name].filter(Boolean).join(' ').trim() ||
+                      item.username ||
+                      `User ${item.actor_id}`;
+                    return (
+                      <article className="history-card" key={item.id}>
+                        <strong>{historyEventLabel(item.event_type)}</strong>
+                        {item.field && (
+                          <p className="history-change">
+                            <span>{historyFieldLabel(item.field)}:</span>{' '}
+                            <span>
+                              {historyValueLabel(item.old_value, item.field)} → {historyValueLabel(item.new_value, item.field)}
+                            </span>
+                          </p>
+                        )}
+                        {!item.field && item.new_value && (
+                          <p className="history-change">
+                            Создана с начальными данными.
+                          </p>
+                        )}
+                        <span>
+                          {toDeadlineLabel(item.created_at)} · {actorName}
+                        </span>
+                      </article>
+                    );
+                  })}
+              </div>
 
               <h3>Комментарии</h3>
               <div className="comment-list">

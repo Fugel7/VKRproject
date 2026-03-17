@@ -346,14 +346,16 @@ body {
 
 .task-list,
 .sprint-list,
-.comment-list {
+.comment-list,
+.history-list {
   display: grid;
   gap: 8px;
 }
 
 .task-card,
 .sprint-card,
-.comment-card {
+.comment-card,
+.history-card {
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface-soft);
@@ -572,9 +574,23 @@ body {
   margin: 6px 0;
 }
 
+.history-card p {
+  margin: 6px 0;
+}
+
 .comment-card span {
   font-size: 12px;
   color: var(--muted);
+}
+
+.history-card span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.history-change {
+  display: grid;
+  gap: 2px;
 }
 
 .comment-form {
