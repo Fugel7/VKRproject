@@ -1,0 +1,103 @@
+﻿.search {
+  width: 100%;
+  margin: 10px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px 14px;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+}
+
+.search:focus,
+.textarea:focus,
+.field input:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 139, 141, 0.15);
+}
+
+.form-card {
+  display: grid;
+  gap: 10px;
+}
+
+.form-card .back-btn {
+  margin-bottom: 0;
+}
+
+.field-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 92px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  resize: vertical;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+.form-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.edit-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.edit-icon-btn:hover {
+  border-color: #bed2e7;
+  color: var(--accent-strong);
+}
+
+.field input,
+.field select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+.field input[readonly],
+.textarea[readonly],
+.field select:disabled {
+  background: #f4f7fb;
+  color: #556277;
+  cursor: default;
+}
+
+.task-details-input {
+  margin: 0;
+}

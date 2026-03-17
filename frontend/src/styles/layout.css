@@ -1,0 +1,213 @@
+﻿.app {
+  max-width: 980px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 22px 16px 28px;
+}
+
+.screen-header {
+  margin-bottom: 16px;
+}
+
+.screen-title {
+  margin: 0;
+  font-family: 'Manrope', 'Nunito Sans', sans-serif;
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: #152238;
+}
+
+.screen-subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.profile-banner {
+  width: 100%;
+  margin: 6px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.profile-banner:disabled {
+  cursor: default;
+  opacity: 0.95;
+}
+
+.profile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #cde5f3;
+}
+
+.profile-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0f4f4;
+  color: var(--accent-strong);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.profile-info strong {
+  font-family: 'Manrope', 'Nunito Sans', sans-serif;
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-info span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.auth-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.project-list {
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-family: 'Manrope', 'Nunito Sans', sans-serif;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+}
+
+.project-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.project-card:hover {
+  transform: translateY(-1px);
+  border-color: #bed2e7;
+  box-shadow: 0 18px 34px rgba(19, 37, 61, 0.12);
+}
+
+.project-card:focus-visible {
+  outline: 3px solid rgba(15, 139, 141, 0.25);
+  outline-offset: 2px;
+}
+
+.delete-icon-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: #ffe4e6;
+  color: #b91c1c;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.delete-icon-btn:hover {
+  background: #fecdd3;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.open-btn,
+.back-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.open-btn:hover,
+.back-btn:hover {
+  background: var(--accent-strong);
+  transform: translateY(-1px);
+}
+
+.open-btn:disabled,
+.back-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.back-btn {
+  margin-bottom: 12px;
+}
+
+.meta .back-btn {
+  margin-bottom: 0;
+}
+
+.empty {
+  padding: 24px 12px;
+  color: var(--muted);
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.compact {
+  padding: 10px;
+}
+
+.board-actions {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 12px;
+  flex-wrap: wrap;
+}
+
+.board-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}

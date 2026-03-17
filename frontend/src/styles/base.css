@@ -1,0 +1,33 @@
+﻿:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-soft: #f7fbff;
+  --text: #19263a;
+  --muted: #6b7a90;
+  --line: #d9e3ef;
+  --accent: #0f8b8d;
+  --accent-strong: #086c70;
+  --accent-text: #ffffff;
+  --danger: #c03744;
+  --shadow: 0 14px 34px rgba(19, 37, 61, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito Sans', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at 8% 10%, #d7efff 0%, transparent 26%),
+    radial-gradient(circle at 88% 0%, #d6f6eb 0%, transparent 24%),
+    linear-gradient(180deg, #f9fcff 0%, #eef4fb 100%);
+  color: var(--text);
+}

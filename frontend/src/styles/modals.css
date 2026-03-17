@@ -1,0 +1,71 @@
+﻿.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 27, 44, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 14px;
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--surface);
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 30px 70px rgba(15, 27, 44, 0.25);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-head h3 {
+  margin: 0;
+}
+
+.modal-close-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: #42506a;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  border-color: #bed2e7;
+  color: #1f2f47;
+}
+
+.comment-card p,
+.history-card p {
+  margin: 6px 0;
+}
+
+.comment-card span,
+.history-card span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.history-change {
+  display: grid;
+  gap: 2px;
+}
+
+.comment-form {
+  display: grid;
+  gap: 8px;
+}

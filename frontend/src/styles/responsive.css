@@ -1,0 +1,24 @@
+﻿@media (max-width: 900px) {
+  .board-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .screen-title {
+    font-size: 27px;
+  }
+
+  .card h3 {
+    font-size: 18px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .open-btn,
+  .back-btn {
+    width: 100%;
+  }
+}
