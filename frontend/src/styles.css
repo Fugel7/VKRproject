@@ -446,6 +446,10 @@ body {
   padding-right: 34px;
 }
 
+.form-card .back-btn {
+  margin-bottom: 0;
+}
+
 .progress-wrap {
   display: grid;
   gap: 4px;

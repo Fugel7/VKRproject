@@ -146,6 +146,7 @@ export default function App() {
   const [commentText, setCommentText] = useState('');
   const [taskHistory, setTaskHistory] = useState([]);
   const [taskHistoryLoading, setTaskHistoryLoading] = useState(false);
+  const [showTaskHistoryModal, setShowTaskHistoryModal] = useState(false);
   const [taskReadMap, setTaskReadMap] = useState({});
   const isTaskDetailsEditing = useMemo(
     () => Object.values(taskDetailsEditing).some(Boolean),
@@ -542,6 +543,7 @@ export default function App() {
 
   function closeTaskDetails() {
     setTaskDetails(null);
+    setShowTaskHistoryModal(false);
     setTaskDetailsEditing({
       title: false,
       description: false,
@@ -1000,7 +1002,7 @@ export default function App() {
           <div className="modal-overlay" onClick={closeTaskDetails}>
             <section className="modal-card" onClick={(e) => e.stopPropagation()}>
               <div className="modal-head">
-                <h3>Задача</h3>
+                <h3>Задача · v{taskDetails.version ?? 1}</h3>
                 <button
                   type="button"
                   className="modal-close-btn"
@@ -1106,43 +1108,14 @@ export default function App() {
                     Сохранить задачу
                   </button>
                 )}
+                <button
+                  className="back-btn"
+                  type="button"
+                  onClick={() => setShowTaskHistoryModal(true)}
+                >
+                  История версий
+                </button>
               </form>
-
-              <h3>История изменений</h3>
-              <div className="history-list">
-                {taskHistoryLoading && <div className="empty compact">Загружаем историю...</div>}
-                {!taskHistoryLoading && taskHistory.length === 0 && (
-                  <div className="empty compact">Изменений пока нет</div>
-                )}
-                {!taskHistoryLoading &&
-                  taskHistory.map((item) => {
-                    const actorName =
-                      [item.first_name, item.last_name].filter(Boolean).join(' ').trim() ||
-                      item.username ||
-                      `User ${item.actor_id}`;
-                    return (
-                      <article className="history-card" key={item.id}>
-                        <strong>{historyEventLabel(item.event_type)}</strong>
-                        {item.field && (
-                          <p className="history-change">
-                            <span>{historyFieldLabel(item.field)}:</span>{' '}
-                            <span>
-                              {historyValueLabel(item.old_value, item.field)} → {historyValueLabel(item.new_value, item.field)}
-                            </span>
-                          </p>
-                        )}
-                        {!item.field && item.new_value && (
-                          <p className="history-change">
-                            Создана с начальными данными.
-                          </p>
-                        )}
-                        <span>
-                          {toDeadlineLabel(item.created_at)} · {actorName}
-                        </span>
-                      </article>
-                    );
-                  })}
-              </div>
 
               <h3>Комментарии</h3>
               <div className="comment-list">
@@ -1173,6 +1146,54 @@ export default function App() {
                   Отправить
                 </button>
               </form>
+            </section>
+          </div>
+        )}
+
+        {taskDetails && showTaskHistoryModal && (
+          <div className="modal-overlay" onClick={() => setShowTaskHistoryModal(false)}>
+            <section className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-head">
+                <h3>История версий · v{taskDetails.version ?? 1}</h3>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setShowTaskHistoryModal(false)}
+                  aria-label="Закрыть окно"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="history-list">
+                {taskHistoryLoading && <div className="empty compact">Загружаем историю...</div>}
+                {!taskHistoryLoading && taskHistory.length === 0 && (
+                  <div className="empty compact">Изменений пока нет</div>
+                )}
+                {!taskHistoryLoading &&
+                  taskHistory.map((item) => {
+                    const actorName =
+                      [item.first_name, item.last_name].filter(Boolean).join(' ').trim() ||
+                      item.username ||
+                      `User ${item.actor_id}`;
+                    return (
+                      <article className="history-card" key={item.id}>
+                        <strong>{historyEventLabel(item.event_type)}</strong>
+                        {item.field && (
+                          <p className="history-change">
+                            <span>{historyFieldLabel(item.field)}:</span>{' '}
+                            <span>
+                              {historyValueLabel(item.old_value, item.field)} → {historyValueLabel(item.new_value, item.field)}
+                            </span>
+                          </p>
+                        )}
+                        {!item.field && item.new_value && <p className="history-change">Создана с начальными данными.</p>}
+                        <span>
+                          {toDeadlineLabel(item.created_at)} · {actorName}
+                        </span>
+                      </article>
+                    );
+                  })}
+              </div>
             </section>
           </div>
         )}
