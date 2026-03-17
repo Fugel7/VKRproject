@@ -350,6 +350,8 @@ def ensure_sprint_tables(cur) -> None:
     cur.execute("ALTER TABLE sprints ADD COLUMN IF NOT EXISTS end_date DATE;")
     cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS sprint_id BIGINT;")
     cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS execution_hours INTEGER;")
+    cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1;")
+    cur.execute("UPDATE tasks SET version = 1 WHERE version IS NULL OR version < 1;")
     cur.execute(
         """
         DO $$
@@ -681,6 +683,7 @@ def list_project_tasks(project_id: int, tg_id: int) -> list[dict]:
                       t.id,
                       t.project_id,
                       t.sprint_id,
+                      t.version,
                       t.title,
                       t.description,
                       t.status,
@@ -862,10 +865,10 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
                 cur.execute(
                     """
                     INSERT INTO tasks (
-                      project_id, sprint_id, title, description, status, author_id, assignee_id, execution_hours
+                      project_id, sprint_id, title, description, status, author_id, assignee_id, execution_hours, version
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    RETURNING id, project_id, sprint_id, title, description, status, execution_hours, created_at, updated_at;
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 1)
+                    RETURNING id, project_id, sprint_id, version, title, description, status, execution_hours, created_at, updated_at;
                     """,
                     (
                         project_id,
@@ -892,6 +895,7 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
                         "status": task["status"],
                         "execution_hours": task["execution_hours"],
                         "sprint_id": task["sprint_id"],
+                        "version": task["version"],
                     },
                 )
             conn.commit()
@@ -1322,7 +1326,7 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
                       status = COALESCE(%s, status),
                       sprint_id = CASE WHEN %s THEN %s ELSE sprint_id END
                     WHERE id = %s
-                    RETURNING id, project_id, sprint_id, title, description, status, execution_hours, created_at, updated_at;
+                    RETURNING id, project_id, sprint_id, version, title, description, status, execution_hours, created_at, updated_at;
                     """,
                     (
                         payload.title.strip() if payload.title is not None else None,
@@ -1345,8 +1349,10 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
                     ("sprint_id", before["sprint_id"], updated["sprint_id"], "UPDATE"),
                     ("status", before["status"], updated["status"], "STATUS_CHANGE"),
                 ]
+                changed_any = False
                 for field, old_val, new_val, event_type in changed_fields:
                     if old_val != new_val:
+                        changed_any = True
                         add_task_audit_entry(
                             cur,
                             task_id=task_id,
@@ -1356,6 +1362,11 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
                             old_value=old_val,
                             new_value=new_val,
                         )
+                if changed_any:
+                    cur.execute("UPDATE tasks SET version = version + 1 WHERE id = %s RETURNING version;", (task_id,))
+                    version_row = cur.fetchone()
+                    if version_row:
+                        updated["version"] = version_row["version"]
             conn.commit()
             return updated
     except RuntimeError as exc:

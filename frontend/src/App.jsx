@@ -593,6 +593,10 @@ export default function App() {
       const apiBase = getApiBase();
       const response = await fetch(`${apiBase}/tasks/${taskId}/history?tg_id=${encodeURIComponent(authState.user.tg_id)}`);
       if (!response.ok) {
+        if (response.status === 404) {
+          setTaskHistory([]);
+          return;
+        }
         throw new Error(`History failed ${response.status}`);
       }
       const data = await response.json();
@@ -731,6 +735,7 @@ export default function App() {
                       🗑
                     </button>
                     <button type="button" className="task-open" onClick={() => openTaskDetails(task)}>
+                      <span className="task-kind">Задача · v{task.version ?? 1}</span>
                       <strong>{task.title}</strong>
                       <span>{task.description || 'Без описания'}</span>
                     </button>
@@ -827,6 +832,7 @@ export default function App() {
                                   🗑
                                 </button>
                                 <button type="button" className="task-open" onClick={() => openTaskDetails(task)}>
+                                  <span className="task-kind">Задача · v{task.version ?? 1}</span>
                                   <strong>{task.title}</strong>
                                   <span>{task.description || 'Без описания'}</span>
                                 </button>

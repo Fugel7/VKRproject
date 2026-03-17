@@ -434,6 +434,14 @@ body {
   font-size: 12px;
 }
 
+.task-kind {
+  font-size: 11px;
+  color: #61718b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .task-card .task-open {
   padding-right: 34px;
 }
