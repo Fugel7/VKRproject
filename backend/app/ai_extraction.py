@@ -86,6 +86,165 @@ def _normalize_ai_tasks(items: list[dict]) -> list[dict]:
     return normalized[:15]
 
 
+_HOUSEHOLD_MARKERS = (
+    "coffee",
+    "tea",
+    "kettle",
+    "lunch",
+    "dinner",
+    "breakfast",
+    "clean",
+    "cleanup",
+    "wash dishes",
+    "groceries",
+    "buy milk",
+    "buy bread",
+    "кофе",
+    "чай",
+    "чайник",
+    "обед",
+    "ужин",
+    "завтрак",
+    "уборк",
+    "посуд",
+    "мусор",
+    "продукт",
+    "хлеб",
+    "молок",
+    "постира",
+    "погуляй",
+    "закажи еду",
+)
+
+_PROJECT_MARKERS = (
+    "app",
+    "api",
+    "backend",
+    "bot",
+    "bug",
+    "button",
+    "checkout",
+    "component",
+    "content",
+    "crm",
+    "dashboard",
+    "database",
+    "deploy",
+    "design",
+    "feature",
+    "figma",
+    "fix",
+    "flow",
+    "frontend",
+    "http",
+    "integration",
+    "interface",
+    "landing",
+    "layout",
+    "login",
+    "modal",
+    "page",
+    "product",
+    "project",
+    "screen",
+    "search",
+    "site",
+    "sprint",
+    "task",
+    "test",
+    "ui",
+    "ux",
+    "vercel",
+    "webhook",
+    "аналит",
+    "авториза",
+    "адаптив",
+    "баг",
+    "бек",
+    "бэкенд",
+    "верстк",
+    "вход",
+    "дизайн",
+    "задач",
+    "интеграц",
+    "интерф",
+    "кнопк",
+    "лендинг",
+    "логин",
+    "макет",
+    "модал",
+    "описани",
+    "оплат",
+    "ошибк",
+    "проект",
+    "поиск",
+    "пользоват",
+    "приложен",
+    "продукт",
+    "раздел",
+    "роут",
+    "сайт",
+    "спринт",
+    "страниц",
+    "таблиц",
+    "таск",
+    "тест",
+    "товар",
+    "фильтр",
+    "фича",
+    "флоу",
+    "форма",
+    "фронт",
+    "чат",
+    "экран",
+)
+
+
+def _contains_any_marker(text: str, markers: tuple[str, ...]) -> bool:
+    lowered = (text or "").lower()
+    return any(marker in lowered for marker in markers)
+
+
+def _is_obviously_offtopic_task(task: dict, source_text: str, project_title: str) -> bool:
+    task_text = " ".join(
+        part.strip()
+        for part in (
+            str(task.get("title") or ""),
+            str(task.get("description") or ""),
+        )
+        if part and part.strip()
+    ).lower()
+    if not task_text:
+        return True
+    if _contains_any_marker(task_text, _HOUSEHOLD_MARKERS) and not _contains_any_marker(task_text, _PROJECT_MARKERS):
+        return True
+
+    combined = " ".join(
+        part.strip()
+        for part in (
+            task_text,
+            source_text or "",
+        )
+        if part and part.strip()
+    ).lower()
+    if _contains_any_marker(combined, _HOUSEHOLD_MARKERS):
+        project_context = " ".join((project_title or "", source_text or "")).lower()
+        if not _contains_any_marker(project_context, _PROJECT_MARKERS):
+            return True
+    return False
+
+
+def filter_extracted_tasks(tasks: list[dict], source_text: str, project_title: str) -> list[dict]:
+    filtered: list[dict] = []
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        if _is_obviously_offtopic_task(task, source_text, project_title):
+            continue
+        filtered.append(task)
+    return filtered[:15]
+
+
 def _split_text_to_clauses(text: str) -> list[str]:
     rough_parts = re.split(r"[\n\r;,.!?]+", text or "")
     clauses: list[str] = []
@@ -193,7 +352,7 @@ def extract_tasks_by_rules(text: str) -> list[dict]:
                 "status": "NEW",
             }
         )
-    return tasks[:15]
+    return filter_extracted_tasks(tasks[:15], text, "")
 
 
 def extract_tasks_via_openrouter(
@@ -353,4 +512,4 @@ def extract_tasks_via_openrouter(
     tasks = payload.get("tasks") if isinstance(payload, dict) else None
     if not isinstance(tasks, list):
         return []
-    return _normalize_ai_tasks(tasks)
+    return filter_extracted_tasks(_normalize_ai_tasks(tasks), content_text, project_title)
