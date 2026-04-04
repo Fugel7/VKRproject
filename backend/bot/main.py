@@ -380,7 +380,6 @@ async def main() -> None:
         created = result.get("created_tasks") or []
         created_count = int(result.get("created_count") or 0)
         if created_count <= 0:
-            await message.reply("Задачи не найдены. Попробуйте описать задачи более явно.")
             return
 
         preview_lines = []
