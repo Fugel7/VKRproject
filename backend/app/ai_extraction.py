@@ -143,7 +143,9 @@ _PROJECT_MARKERS = (
     "layout",
     "login",
     "modal",
+    "menu",
     "page",
+    "popup",
     "product",
     "project",
     "screen",
@@ -172,10 +174,14 @@ _PROJECT_MARKERS = (
     "лендинг",
     "логин",
     "макет",
+    "меню",
     "модал",
+    "окн",
     "описани",
     "оплат",
     "ошибк",
+    "попап",
+    "пополн",
     "проект",
     "поиск",
     "пользоват",
@@ -186,6 +192,7 @@ _PROJECT_MARKERS = (
     "сайт",
     "спринт",
     "страниц",
+    "стил",
     "таблиц",
     "таск",
     "тест",
@@ -196,7 +203,9 @@ _PROJECT_MARKERS = (
     "форма",
     "фронт",
     "чат",
+    "цвет",
     "экран",
+    "шапк",
 )
 
 
@@ -251,7 +260,7 @@ def _split_text_to_clauses(text: str) -> list[str]:
     for part in rough_parts:
         if not part.strip():
             continue
-        subparts = re.split(r"\b(?:и|а|но|затем|потом)\b", part, flags=re.IGNORECASE)
+        subparts = re.split(r"\b(?:а|но|затем|потом)\b", part, flags=re.IGNORECASE)
         for subpart in subparts:
             cleaned = subpart.strip(" -:\t")
             if cleaned:
@@ -288,6 +297,27 @@ def extract_tasks_by_rules(text: str) -> list[dict]:
         "необходимо",
         "требуется",
     )
+    issue_markers = (
+        "не работает",
+        "не открывается",
+        "не нажимается",
+        "перекрывает",
+        "обрезается",
+        "съезжает",
+        "сломал",
+        "сломано",
+        "ломает",
+        "ошибка",
+        "баг",
+        "некорректно",
+        "криво",
+        "не видно",
+        "не помещается",
+        "пропадает",
+        "наезжает",
+        "закрывает",
+        "перекрыто",
+    )
     project_markers = (
         "страниц",
         "карточк",
@@ -298,6 +328,12 @@ def extract_tasks_by_rules(text: str) -> list[dict]:
         "ux",
         "верстк",
         "макет",
+        "меню",
+        "окн",
+        "шапк",
+        "цвет",
+        "стил",
+        "пополн",
         "фронтенд",
         "frontend",
         "бэкенд",
@@ -323,22 +359,24 @@ def extract_tasks_by_rules(text: str) -> list[dict]:
     for clause in _split_text_to_clauses(text):
         lowered = clause.lower()
         has_action = any(marker in lowered for marker in action_markers)
+        has_issue = any(marker in lowered for marker in issue_markers)
         has_project = any(marker in lowered for marker in project_markers)
-        if not has_action or not has_project:
+        if not has_project or (not has_action and not has_issue):
             continue
 
         title = re.sub(
-            r"^\s*(?:надо(?: бы)?|нужно|необходимо|требуется|не забыть бы|пожалуйста)\s+",
+            r"^\s*(?:и\s+)?(?:надо(?: бы)?|нужно|необходимо|требуется|не забыть бы|пожалуйста)\s+",
             "",
             clause,
             flags=re.IGNORECASE,
         )
         title = re.sub(
-            r"^\s*(?:сделай|сделать|добавь|добавить|исправь|исправить|измени|изменить|обнови|обновить|создай|создать|удали|удалить|реализуй|реализовать|настрой|настроить|почини|починить)\s+",
+            r"^\s*(?:и\s+)?(?:сделай|сделать|сделайте|добавь|добавить|исправь|исправить|измени|изменить|обнови|обновить|создай|создать|удали|удалить|реализуй|реализовать|настрой|настроить|почини|починить)\s+",
             "",
             title,
             flags=re.IGNORECASE,
         ).strip(" .,:;-")
+        title = re.sub(r"^\s*(?:пожалуйста)\s+", "", title, flags=re.IGNORECASE).strip(" .,:;-")
         if not title:
             continue
         if len(title) > 180:
