@@ -23,6 +23,7 @@ export function useBoard({ selectedProject, tgId }) {
   });
   const [expandedSprints, setExpandedSprints] = useState({});
   const [taskDetails, setTaskDetails] = useState(null);
+  const [taskDetailsOriginal, setTaskDetailsOriginal] = useState(null);
   const [taskDetailsEditing, setTaskDetailsEditing] = useState({
     title: false,
     description: false,
@@ -218,11 +219,32 @@ export function useBoard({ selectedProject, tgId }) {
 
   const closeTaskDetails = useCallback(() => {
     setTaskDetails(null);
+    setTaskDetailsOriginal(null);
     setShowTaskHistoryModal(false);
     setTaskDetailsEditing({ title: false, description: false, status: false, execution_hours: false, sprint_id: false });
     setCommentText('');
     setTaskHistory([]);
   }, []);
+
+  const startTaskFieldEdit = useCallback((field) => {
+    setTaskDetailsEditing((prev) => ({ ...prev, [field]: true }));
+  }, []);
+
+  const cancelTaskFieldEdit = useCallback((field) => {
+    if (!taskDetailsOriginal) {
+      setTaskDetailsEditing((prev) => ({ ...prev, [field]: false }));
+      return;
+    }
+
+    const originalValue = taskDetailsOriginal[field];
+    let normalizedValue = originalValue;
+
+    if (field === 'execution_hours') normalizedValue = originalValue ?? '';
+    if (field === 'sprint_id') normalizedValue = originalValue == null ? '' : String(originalValue);
+
+    setTaskDetails((prev) => (prev ? { ...prev, [field]: normalizedValue } : prev));
+    setTaskDetailsEditing((prev) => ({ ...prev, [field]: false }));
+  }, [taskDetailsOriginal]);
 
   const deleteTask = useCallback(async (taskId, taskTitle) => {
     if (!tgId || !selectedProject?.id) return;
@@ -323,6 +345,7 @@ export function useBoard({ selectedProject, tgId }) {
       execution_hours: task.execution_hours ?? '',
       sprint_id: task.sprint_id == null ? '' : String(task.sprint_id),
     });
+    setTaskDetailsOriginal({ ...task });
     setTaskDetailsEditing({ title: false, description: false, status: false, execution_hours: false, sprint_id: false });
     setCommentText('');
     void loadTaskComments(task.id);
@@ -402,6 +425,8 @@ export function useBoard({ selectedProject, tgId }) {
     expandedSprints,
     taskDetails,
     setTaskDetails,
+    startTaskFieldEdit,
+    cancelTaskFieldEdit,
     taskDetailsEditing,
     setTaskDetailsEditing,
     comments,

@@ -43,6 +43,8 @@ export default function ProjectBoardView({
   taskDetailsEditing,
   setTaskDetailsEditing,
   setTaskDetails,
+  startTaskFieldEdit,
+  cancelTaskFieldEdit,
   isTaskDetailsEditing,
   commentsLoading,
   comments,
@@ -209,6 +211,8 @@ export default function ProjectBoardView({
         taskDetailsEditing={taskDetailsEditing}
         setTaskDetailsEditing={setTaskDetailsEditing}
         setTaskDetails={setTaskDetails}
+        startTaskFieldEdit={startTaskFieldEdit}
+        cancelTaskFieldEdit={cancelTaskFieldEdit}
         statusOptions={statusOptions}
         sprints={sprints}
         isTaskDetailsEditing={isTaskDetailsEditing}

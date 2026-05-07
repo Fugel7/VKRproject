@@ -134,6 +134,8 @@ export default function App() {
         taskDetailsEditing={board.taskDetailsEditing}
         setTaskDetailsEditing={board.setTaskDetailsEditing}
         setTaskDetails={board.setTaskDetails}
+        startTaskFieldEdit={board.startTaskFieldEdit}
+        cancelTaskFieldEdit={board.cancelTaskFieldEdit}
         isTaskDetailsEditing={board.isTaskDetailsEditing}
         commentsLoading={board.commentsLoading}
         comments={board.comments}

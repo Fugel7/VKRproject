@@ -68,16 +68,29 @@
   height: 28px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--surface);
-  color: var(--muted);
+  background: #eef3f8;
+  color: #57667c;
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .edit-icon-btn:hover {
   border-color: #bed2e7;
   color: var(--accent-strong);
+}
+
+.edit-icon-btn.editing {
+  border-color: #f1b7bd;
+  background: #ffe5e8;
+  color: #c23645;
+}
+
+.edit-icon-btn.editing:hover {
+  border-color: #ea97a1;
+  background: #ffd6db;
+  color: #a61b2a;
 }
 
 .field input,
@@ -94,9 +107,27 @@
 .field input[readonly],
 .textarea[readonly],
 .field select:disabled {
-  background: #f4f7fb;
-  color: #556277;
+  background: #e7edf4;
+  border-color: #cad5e1;
+  color: #435166;
   cursor: default;
+}
+
+.field.is-editing input,
+.field.is-editing select,
+.field.is-editing .textarea {
+  background: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 139, 141, 0.12);
+}
+
+.field.is-editing .field-top span {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.field.is-readonly .field-top span {
+  color: #64748b;
 }
 
 .task-details-input {

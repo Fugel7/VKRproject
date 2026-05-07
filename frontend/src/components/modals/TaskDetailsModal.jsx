@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function TaskDetailsModal({
   taskDetails,
@@ -6,8 +6,9 @@ export default function TaskDetailsModal({
   onOpenHistory,
   onSubmit,
   taskDetailsEditing,
-  setTaskDetailsEditing,
   setTaskDetails,
+  startTaskFieldEdit,
+  cancelTaskFieldEdit,
   statusOptions,
   sprints,
   isTaskDetailsEditing,
@@ -18,7 +19,61 @@ export default function TaskDetailsModal({
   onCreateComment,
   toDeadlineLabel
 }) {
+  const titleRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const statusRef = useRef(null);
+  const executionHoursRef = useRef(null);
+  const sprintRef = useRef(null);
+
+  useEffect(() => {
+    if (taskDetailsEditing.title && titleRef.current) {
+      titleRef.current.focus();
+      titleRef.current.select();
+    }
+  }, [taskDetailsEditing.title]);
+
+  useEffect(() => {
+    if (taskDetailsEditing.description && descriptionRef.current) {
+      descriptionRef.current.focus();
+      descriptionRef.current.setSelectionRange?.(descriptionRef.current.value.length, descriptionRef.current.value.length);
+    }
+  }, [taskDetailsEditing.description]);
+
+  useEffect(() => {
+    if (taskDetailsEditing.status && statusRef.current) {
+      statusRef.current.focus();
+    }
+  }, [taskDetailsEditing.status]);
+
+  useEffect(() => {
+    if (taskDetailsEditing.execution_hours && executionHoursRef.current) {
+      executionHoursRef.current.focus();
+      executionHoursRef.current.select?.();
+    }
+  }, [taskDetailsEditing.execution_hours]);
+
+  useEffect(() => {
+    if (taskDetailsEditing.sprint_id && sprintRef.current) {
+      sprintRef.current.focus();
+    }
+  }, [taskDetailsEditing.sprint_id]);
+
   if (!taskDetails) return null;
+
+  function renderEditButton(field, label) {
+    const isEditing = !!taskDetailsEditing[field];
+    return (
+      <button
+        type="button"
+        className={`edit-icon-btn ${isEditing ? 'editing' : ''}`}
+        onClick={() => (isEditing ? cancelTaskFieldEdit(field) : startTaskFieldEdit(field))}
+        aria-label={isEditing ? `Отменить редактирование поля: ${label}` : `Редактировать поле: ${label}`}
+        title={isEditing ? 'Отменить изменение' : `Редактировать: ${label}`}
+      >
+        {isEditing ? '×' : '✎'}
+      </button>
+    );
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -35,20 +90,13 @@ export default function TaskDetailsModal({
           </button>
         </div>
         <form onSubmit={onSubmit} className="form-card">
-          <label className="field">
+          <label className={`field ${taskDetailsEditing.title ? 'is-editing' : 'is-readonly'}`}>
             <div className="field-top">
               <span>Название</span>
-              <button
-                type="button"
-                className="edit-icon-btn"
-                onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, title: true }))}
-                aria-label="Редактировать название"
-                title="Редактировать название"
-              >
-                ✎
-              </button>
+              {renderEditButton('title', 'Название')}
             </div>
             <input
+              ref={titleRef}
               className="search task-details-input"
               value={taskDetails.title}
               readOnly={!taskDetailsEditing.title}
@@ -56,20 +104,13 @@ export default function TaskDetailsModal({
               required
             />
           </label>
-          <label className="field">
+          <label className={`field ${taskDetailsEditing.description ? 'is-editing' : 'is-readonly'}`}>
             <div className="field-top">
               <span>Описание</span>
-              <button
-                type="button"
-                className="edit-icon-btn"
-                onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, description: true }))}
-                aria-label="Редактировать описание"
-                title="Редактировать описание"
-              >
-                ✎
-              </button>
+              {renderEditButton('description', 'Описание')}
             </div>
             <textarea
+              ref={descriptionRef}
               className="textarea"
               value={taskDetails.description ?? ''}
               readOnly={!taskDetailsEditing.description}
@@ -77,20 +118,13 @@ export default function TaskDetailsModal({
             />
           </label>
           <div className="form-row">
-            <label className="field">
+            <label className={`field ${taskDetailsEditing.status ? 'is-editing' : 'is-readonly'}`}>
               <div className="field-top">
                 <span>Статус</span>
-                <button
-                  type="button"
-                  className="edit-icon-btn"
-                  onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, status: true }))}
-                  aria-label="Редактировать статус"
-                  title="Редактировать статус"
-                >
-                  ✎
-                </button>
+                {renderEditButton('status', 'Статус')}
               </div>
               <select
+                ref={statusRef}
                 value={taskDetails.status}
                 disabled={!taskDetailsEditing.status}
                 onChange={(e) => setTaskDetails((prev) => ({ ...prev, status: e.target.value }))}
@@ -102,20 +136,13 @@ export default function TaskDetailsModal({
                 ))}
               </select>
             </label>
-            <label className="field">
+            <label className={`field ${taskDetailsEditing.execution_hours ? 'is-editing' : 'is-readonly'}`}>
               <div className="field-top">
                 <span>Время выполнения (ч)</span>
-                <button
-                  type="button"
-                  className="edit-icon-btn"
-                  onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, execution_hours: true }))}
-                  aria-label="Редактировать время выполнения"
-                  title="Редактировать время выполнения"
-                >
-                  ✎
-                </button>
+                {renderEditButton('execution_hours', 'Время выполнения')}
               </div>
               <input
+                ref={executionHoursRef}
                 type="number"
                 min="1"
                 value={taskDetails.execution_hours ?? ''}
@@ -125,20 +152,13 @@ export default function TaskDetailsModal({
               />
             </label>
           </div>
-          <label className="field">
+          <label className={`field ${taskDetailsEditing.sprint_id ? 'is-editing' : 'is-readonly'}`}>
             <div className="field-top">
               <span>Спринт</span>
-              <button
-                type="button"
-                className="edit-icon-btn"
-                onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, sprint_id: true }))}
-                aria-label="Редактировать спринт"
-                title="Редактировать спринт"
-              >
-                ✎
-              </button>
+              {renderEditButton('sprint_id', 'Спринт')}
             </div>
             <select
+              ref={sprintRef}
               value={taskDetails.sprint_id ?? ''}
               disabled={!taskDetailsEditing.sprint_id}
               onChange={(e) => setTaskDetails((prev) => ({ ...prev, sprint_id: e.target.value }))}
