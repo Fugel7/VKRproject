@@ -28,6 +28,7 @@ export function useBoard({ selectedProject, tgId }) {
     description: false,
     status: false,
     execution_hours: false,
+    sprint_id: false,
   });
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -218,7 +219,7 @@ export function useBoard({ selectedProject, tgId }) {
   const closeTaskDetails = useCallback(() => {
     setTaskDetails(null);
     setShowTaskHistoryModal(false);
-    setTaskDetailsEditing({ title: false, description: false, status: false, execution_hours: false });
+    setTaskDetailsEditing({ title: false, description: false, status: false, execution_hours: false, sprint_id: false });
     setCommentText('');
     setTaskHistory([]);
   }, []);
@@ -317,8 +318,12 @@ export function useBoard({ selectedProject, tgId }) {
   }, [tgId]);
 
   const openTaskDetails = useCallback((task) => {
-    setTaskDetails({ ...task, execution_hours: task.execution_hours ?? '' });
-    setTaskDetailsEditing({ title: false, description: false, status: false, execution_hours: false });
+    setTaskDetails({
+      ...task,
+      execution_hours: task.execution_hours ?? '',
+      sprint_id: task.sprint_id == null ? '' : String(task.sprint_id),
+    });
+    setTaskDetailsEditing({ title: false, description: false, status: false, execution_hours: false, sprint_id: false });
     setCommentText('');
     void loadTaskComments(task.id);
     void loadTaskHistory(task.id);
@@ -333,6 +338,7 @@ export function useBoard({ selectedProject, tgId }) {
         description: taskDetails.description,
         status: taskDetails.status,
         execution_hours: taskDetails.execution_hours === '' ? null : Number(taskDetails.execution_hours),
+        sprint_id: taskDetails.sprint_id === '' ? null : Number(taskDetails.sprint_id),
       });
       if (selectedProject?.id && tgId) {
         await loadBoard(selectedProject.id, tgId);

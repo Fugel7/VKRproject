@@ -337,16 +337,16 @@ def create_bot_tasks_from_message(payload: BotIngestMessageRequest) -> dict:
 
 
 def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
+    fields_set = payload.model_fields_set
     if (
         payload.title is None
         and payload.description is None
-        and payload.execution_hours is None
         and payload.status is None
-        and payload.sprint_id is None
+        and "execution_hours" not in fields_set
+        and "sprint_id" not in fields_set
     ):
         raise HTTPException(status_code=400, detail="No task fields to update")
     status = normalize_task_status(payload.status) if payload.status is not None else None
-    fields_set = payload.model_fields_set
     sprint_value = payload.sprint_id if "sprint_id" in fields_set else "__KEEP__"
     execution_hours_value = payload.execution_hours if "execution_hours" in fields_set else "__KEEP__"
     if execution_hours_value != "__KEEP__" and execution_hours_value is not None and execution_hours_value <= 0:

@@ -216,6 +216,14 @@ def should_attempt_task_extraction(text: str) -> bool:
     return any(marker in lowered for marker in action_markers)
 
 
+from bot.helpers import (  # noqa: E402
+    build_startapp_link,
+    extract_text_from_docx_bytes,
+    extract_text_from_pdf_bytes,
+    should_attempt_task_extraction,
+)
+
+
 async def main() -> None:
     token = get_required_env("TELEGRAM_BOT_TOKEN")
     web_app_url = get_required_env("WEB_APP_URL")

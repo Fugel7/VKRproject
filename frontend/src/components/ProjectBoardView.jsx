@@ -210,6 +210,7 @@ export default function ProjectBoardView({
         setTaskDetailsEditing={setTaskDetailsEditing}
         setTaskDetails={setTaskDetails}
         statusOptions={statusOptions}
+        sprints={sprints}
         isTaskDetailsEditing={isTaskDetailsEditing}
         commentsLoading={commentsLoading}
         comments={comments}

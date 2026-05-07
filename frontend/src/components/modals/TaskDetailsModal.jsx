@@ -9,6 +9,7 @@ export default function TaskDetailsModal({
   setTaskDetailsEditing,
   setTaskDetails,
   statusOptions,
+  sprints,
   isTaskDetailsEditing,
   commentsLoading,
   comments,
@@ -124,6 +125,32 @@ export default function TaskDetailsModal({
               />
             </label>
           </div>
+          <label className="field">
+            <div className="field-top">
+              <span>Спринт</span>
+              <button
+                type="button"
+                className="edit-icon-btn"
+                onClick={() => setTaskDetailsEditing((prev) => ({ ...prev, sprint_id: true }))}
+                aria-label="Редактировать спринт"
+                title="Редактировать спринт"
+              >
+                ✎
+              </button>
+            </div>
+            <select
+              value={taskDetails.sprint_id ?? ''}
+              disabled={!taskDetailsEditing.sprint_id}
+              onChange={(e) => setTaskDetails((prev) => ({ ...prev, sprint_id: e.target.value }))}
+            >
+              <option value="">Без спринта</option>
+              {sprints.map((sprint) => (
+                <option key={sprint.id} value={String(sprint.id)}>
+                  {sprint.title}
+                </option>
+              ))}
+            </select>
+          </label>
           {isTaskDetailsEditing && (
             <button className="open-btn" type="submit">
               Сохранить задачу
