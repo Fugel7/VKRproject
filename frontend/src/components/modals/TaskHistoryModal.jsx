@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 export default function TaskHistoryModal({
   show,
@@ -13,6 +13,30 @@ export default function TaskHistoryModal({
 }) {
   if (!show) return null;
 
+  const groupedHistory = taskHistory.reduce((groups, item) => {
+    const lastGroup = groups[groups.length - 1];
+    const canMerge =
+      lastGroup &&
+      lastGroup.actor_id === item.actor_id &&
+      lastGroup.created_at === item.created_at;
+
+    if (canMerge) {
+      lastGroup.items.push(item);
+      return groups;
+    }
+
+    groups.push({
+      id: item.id,
+      actor_id: item.actor_id,
+      first_name: item.first_name,
+      last_name: item.last_name,
+      username: item.username,
+      created_at: item.created_at,
+      items: [item],
+    });
+    return groups;
+  }, []);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <section className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -26,25 +50,35 @@ export default function TaskHistoryModal({
           {taskHistoryLoading && <div className="empty compact">Загружаем историю...</div>}
           {!taskHistoryLoading && taskHistory.length === 0 && <div className="empty compact">Изменений пока нет</div>}
           {!taskHistoryLoading &&
-            taskHistory.map((item) => {
+            groupedHistory.map((group) => {
               const actorName =
-                [item.first_name, item.last_name].filter(Boolean).join(' ').trim() ||
-                item.username ||
-                `User ${item.actor_id}`;
+                [group.first_name, group.last_name].filter(Boolean).join(' ').trim() ||
+                group.username ||
+                `User ${group.actor_id}`;
+              const primaryItem = group.items[0];
+              const changedItems = group.items.filter((entry) => entry.field);
+              const hasCreateItem = group.items.some((entry) => !entry.field && entry.new_value);
+              const title =
+                hasCreateItem
+                  ? historyEventLabel('CREATE')
+                  : group.items.length > 1
+                    ? 'Изменение задачи'
+                    : historyEventLabel(primaryItem.event_type);
+
               return (
-                <article className="history-card" key={item.id}>
-                  <strong>{historyEventLabel(item.event_type)}</strong>
-                  {item.field && (
-                    <p className="history-change">
-                      <span>{historyFieldLabel(item.field)}:</span>{' '}
+                <article className="history-card" key={group.id}>
+                  <strong>{title}</strong>
+                  {changedItems.map((entry) => (
+                    <p className="history-change" key={entry.id}>
+                      <span>{historyFieldLabel(entry.field)}:</span>{' '}
                       <span>
-                        {historyValueLabel(item.old_value, item.field)} → {historyValueLabel(item.new_value, item.field)}
+                        {historyValueLabel(entry.old_value, entry.field)} → {historyValueLabel(entry.new_value, entry.field)}
                       </span>
                     </p>
-                  )}
-                  {!item.field && item.new_value && <p className="history-change">Создана с начальными данными.</p>}
+                  ))}
+                  {hasCreateItem && <p className="history-change">Создана с начальными данными.</p>}
                   <span>
-                    {toDeadlineLabel(item.created_at)} · {actorName}
+                    {toDeadlineLabel(group.created_at)} · {actorName}
                   </span>
                 </article>
               );
