@@ -1,4 +1,4 @@
-﻿.task-list,
+.task-list,
 .sprint-list,
 .comment-list,
 .history-list {
@@ -73,6 +73,14 @@
   color: inherit;
 }
 
+.task-headline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .task-open strong,
 .sprint-header strong {
   font-size: 15px;
@@ -91,6 +99,30 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.task-inline-meta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid #d8e4ec;
+  border-radius: 999px;
+  background: #f6fafc;
+  color: #52657c;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .task-card .task-open {
@@ -146,19 +178,6 @@
   margin: 0;
 }
 
-.task-meta {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 8px;
-}
-
-.task-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
 .task-comments {
   display: inline-flex;
   align-items: center;
@@ -168,6 +187,8 @@
 .task-comments.unread {
   color: var(--accent-strong);
   font-weight: 700;
+  border-color: #bfe4f0;
+  background: #edf9fd;
 }
 
 .unread-badge {
