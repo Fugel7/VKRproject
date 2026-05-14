@@ -148,7 +148,7 @@ def get_whisper_model():
     if _whisper_model is None:
         from faster_whisper import WhisperModel
 
-        model_name = os.getenv("WHISPER_MODEL", "tiny").strip() or "tiny"
+        model_name = os.getenv("WHISPER_MODEL", "base").strip() or "base"
         device = os.getenv("WHISPER_DEVICE", "cpu").strip() or "cpu"
         compute_type = os.getenv("WHISPER_COMPUTE_TYPE", "int8").strip() or "int8"
         download_root = os.getenv("WHISPER_CACHE_DIR", "").strip() or None
@@ -174,11 +174,35 @@ def transcribe_media_bytes(content: bytes, suffix: str) -> str:
         temp_path = temp_file.name
     try:
         model = get_whisper_model()
+        language = os.getenv("WHISPER_LANGUAGE", "ru").strip() or None
+        task = os.getenv("WHISPER_TASK", "transcribe").strip() or "transcribe"
+        initial_prompt = os.getenv("WHISPER_INITIAL_PROMPT", "").strip() or None
+        beam_size_raw = os.getenv("WHISPER_BEAM_SIZE", "5").strip() or "5"
+        best_of_raw = os.getenv("WHISPER_BEST_OF", "5").strip() or "5"
+        temperature_raw = os.getenv("WHISPER_TEMPERATURE", "0").strip() or "0"
+        try:
+            beam_size = max(1, int(beam_size_raw))
+        except ValueError:
+            beam_size = 5
+        try:
+            best_of = max(1, int(best_of_raw))
+        except ValueError:
+            best_of = 5
+        try:
+            temperature = float(temperature_raw)
+        except ValueError:
+            temperature = 0.0
         for vad_filter in (True, False):
             segments, info = model.transcribe(
                 temp_path,
+                language=language,
+                task=task,
                 vad_filter=vad_filter,
-                beam_size=1,
+                beam_size=beam_size,
+                best_of=best_of,
+                temperature=temperature,
+                condition_on_previous_text=False,
+                initial_prompt=initial_prompt,
             )
             chunks = []
             for segment in segments:
@@ -188,11 +212,12 @@ def transcribe_media_bytes(content: bytes, suffix: str) -> str:
             transcript = " ".join(chunks).strip()
             if transcript:
                 logger.info(
-                    "Transcribed media suffix=%s duration=%s language=%s vad_filter=%s text_len=%s",
+                    "Transcribed media suffix=%s duration=%s language=%s vad_filter=%s beam_size=%s text_len=%s",
                     suffix,
                     getattr(info, "duration", None),
                     getattr(info, "language", None),
                     vad_filter,
+                    beam_size,
                     len(transcript),
                 )
                 return transcript
