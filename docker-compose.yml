@@ -37,6 +37,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        WHISPER_MODEL: ${WHISPER_MODEL:-tiny}
+        PRELOAD_WHISPER_MODEL: ${PRELOAD_WHISPER_MODEL:-1}
     container_name: vkr_bot
     restart: unless-stopped
     command: ["python", "-m", "bot.main"]
@@ -50,6 +53,8 @@ services:
       WHISPER_MODEL: ${WHISPER_MODEL:-tiny}
       WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
       WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
+      WHISPER_CACHE_DIR: ${WHISPER_CACHE_DIR:-/opt/whisper-cache}
+      WHISPER_PRELOAD_ON_START: ${WHISPER_PRELOAD_ON_START:-0}
     depends_on:
       - backend
 

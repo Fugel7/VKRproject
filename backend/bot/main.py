@@ -147,7 +147,13 @@ def get_whisper_model():
         model_name = os.getenv("WHISPER_MODEL", "tiny").strip() or "tiny"
         device = os.getenv("WHISPER_DEVICE", "cpu").strip() or "cpu"
         compute_type = os.getenv("WHISPER_COMPUTE_TYPE", "int8").strip() or "int8"
-        _whisper_model = WhisperModel(model_name, device=device, compute_type=compute_type)
+        download_root = os.getenv("WHISPER_CACHE_DIR", "").strip() or None
+        _whisper_model = WhisperModel(
+            model_name,
+            device=device,
+            compute_type=compute_type,
+            download_root=download_root,
+        )
     return _whisper_model
 
 
@@ -234,6 +240,9 @@ async def main() -> None:
 
     bot = Bot(token=token)
     dp = Dispatcher()
+
+    if os.getenv("WHISPER_PRELOAD_ON_START", "0").strip().lower() in {"1", "true", "yes", "on"}:
+        await asyncio.to_thread(get_whisper_model)
 
     @dp.message(CommandStart())
     async def cmd_start(message: Message) -> None:
