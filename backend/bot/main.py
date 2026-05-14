@@ -433,6 +433,11 @@ async def main() -> None:
         created = result.get("created_tasks") or []
         created_count = int(result.get("created_count") or 0)
         if created_count <= 0:
+            await message.reply(
+                "Не удалось выделить задачи из этого сообщения. "
+                "Попробуйте сформулировать их более явно, например: "
+                "\"создай задачу: исправить авторизацию, 4 часа\"."
+            )
             return
 
         preview_lines = []

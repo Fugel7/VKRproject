@@ -59,6 +59,8 @@ export default function ProjectBoardView({
   historyFieldLabel,
   historyValueLabel,
 }) {
+  const hasSprints = sprints.length > 0;
+
   return (
     <main className="app">
       <div className="screen-header">
@@ -87,7 +89,11 @@ export default function ProjectBoardView({
         <div className="board-grid">
           <section className="card">
             <h3>Задачи</h3>
-            <p className="screen-subtitle">Перетащите задачу в спринт, чтобы добавить ее в план.</p>
+            <p className="screen-subtitle">
+              {hasSprints
+                ? 'Перетащите задачу в спринт, чтобы добавить ее в план.'
+                : 'Создавайте и ведите задачи по проекту. Спринты появятся после создания.'}
+            </p>
             <div className="task-list">
               {backlogTasks.length === 0 && <div className="empty compact">Свободных задач нет</div>}
               {backlogTasks.map((task) => (
@@ -105,83 +111,84 @@ export default function ProjectBoardView({
             </div>
           </section>
 
-          <section className="card">
-            <h3>Спринты</h3>
-            <div className="sprint-list">
-              {sprints.length === 0 && <div className="empty compact">Спринтов пока нет</div>}
-              {sprints.map((sprint) => {
-                const sprintTasks = sprintTasksSorted(sprint.id);
-                const doneCount = sprintTasks.filter((task) => task.status === 'DONE').length;
-                const sprintProgress = sprintTasks.length ? Math.round((doneCount / sprintTasks.length) * 100) : 0;
-                const isOpen = !!expandedSprints[sprint.id];
+          {hasSprints && (
+            <section className="card">
+              <h3>Спринты</h3>
+              <div className="sprint-list">
+                {sprints.map((sprint) => {
+                  const sprintTasks = sprintTasksSorted(sprint.id);
+                  const doneCount = sprintTasks.filter((task) => task.status === 'DONE').length;
+                  const sprintProgress = sprintTasks.length ? Math.round((doneCount / sprintTasks.length) * 100) : 0;
+                  const isOpen = !!expandedSprints[sprint.id];
 
-                return (
-                  <article
-                    key={sprint.id}
-                    className="sprint-card"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      const draggedTaskId = Number(e.dataTransfer.getData('text/task-id'));
-                      if (draggedTaskId) void moveTaskToSprint(draggedTaskId, sprint.id);
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="sprint-delete-btn"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void onDeleteSprint(sprint.id, sprint.title);
+                  return (
+                    <article
+                      key={sprint.id}
+                      className="sprint-card"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        const draggedTaskId = Number(e.dataTransfer.getData('text/task-id'));
+                        if (draggedTaskId) void moveTaskToSprint(draggedTaskId, sprint.id);
                       }}
-                      aria-label="Удалить спринт"
-                      title="Удалить спринт"
                     >
-                      🗑
-                    </button>
-                    <button type="button" className="sprint-header" onClick={() => toggleSprint(sprint.id, isOpen)}>
-                      <strong>{sprint.title}</strong>
-                      <span>{isOpen ? 'Свернуть' : 'Открыть'}</span>
-                    </button>
-                    <p className="screen-subtitle sprint-dates">
-                      Срок спринта: {toSprintDateLabel(sprint.start_date)} - {toSprintDateLabel(sprint.end_date)}
-                    </p>
-                    <div className="progress-line sprint-progress">
-                      <div className="progress-fill" style={{ width: `${sprintProgress}%` }} />
-                    </div>
-                    <p className="screen-subtitle">
-                      Выполнено: {doneCount} из {sprintTasks.length}
-                    </p>
-                    {isOpen && (
-                      <>
-                        <button
-                          className="open-btn small-btn"
-                          type="button"
-                          onClick={() => {
-                            setShowTaskModal(true);
-                            setTaskForm((prev) => ({ ...prev, sprint_id: String(sprint.id) }));
-                          }}
-                        >
-                          Добавить задачу в спринт
-                        </button>
-                        <div className="task-list">
-                          {sprintTasks.length === 0 && <div className="empty compact">Задач в спринте нет</div>}
-                          {sprintTasks.map((task) => (
-                            <TaskCard
-                              key={task.id}
-                              task={task}
-                              unreadCount={taskUnreadCount(task)}
-                              onDelete={(item) => void onDeleteTask(item.id, item.title)}
-                              onOpen={onOpenTaskDetails}
-                              TaskProgressComponent={TaskProgressComponent}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          </section>
+                      <button
+                        type="button"
+                        className="sprint-delete-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void onDeleteSprint(sprint.id, sprint.title);
+                        }}
+                        aria-label="Удалить спринт"
+                        title="Удалить спринт"
+                      >
+                        x
+                      </button>
+                      <button type="button" className="sprint-header" onClick={() => toggleSprint(sprint.id, isOpen)}>
+                        <strong>{sprint.title}</strong>
+                        <span>{isOpen ? 'Свернуть' : 'Открыть'}</span>
+                      </button>
+                      <p className="screen-subtitle sprint-dates">
+                        Срок спринта: {toSprintDateLabel(sprint.start_date)} - {toSprintDateLabel(sprint.end_date)}
+                      </p>
+                      <div className="progress-line sprint-progress">
+                        <div className="progress-fill" style={{ width: `${sprintProgress}%` }} />
+                      </div>
+                      <p className="screen-subtitle">
+                        Выполнено: {doneCount} из {sprintTasks.length}
+                      </p>
+                      {isOpen && (
+                        <>
+                          <button
+                            className="open-btn small-btn"
+                            type="button"
+                            onClick={() => {
+                              setShowTaskModal(true);
+                              setTaskForm((prev) => ({ ...prev, sprint_id: String(sprint.id) }));
+                            }}
+                          >
+                            Добавить задачу в спринт
+                          </button>
+                          <div className="task-list">
+                            {sprintTasks.length === 0 && <div className="empty compact">Задач в спринте нет</div>}
+                            {sprintTasks.map((task) => (
+                              <TaskCard
+                                key={task.id}
+                                task={task}
+                                unreadCount={taskUnreadCount(task)}
+                                onDelete={(item) => void onDeleteTask(item.id, item.title)}
+                                onOpen={onOpenTaskDetails}
+                                TaskProgressComponent={TaskProgressComponent}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       )}
 

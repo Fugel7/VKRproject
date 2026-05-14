@@ -11,6 +11,8 @@ export default function CreateTaskModal({
 }) {
   if (!show) return null;
 
+  const hasSprints = sprints.length > 0;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <section className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -55,17 +57,19 @@ export default function CreateTaskModal({
                 ))}
               </select>
             </label>
-            <label className="field">
-              <span>Спринт</span>
-              <select value={taskForm.sprint_id} onChange={(e) => setTaskForm((prev) => ({ ...prev, sprint_id: e.target.value }))}>
-                <option value="">Без спринта</option>
-                {sprints.map((sprint) => (
-                  <option key={sprint.id} value={sprint.id}>
-                    {sprint.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {hasSprints && (
+              <label className="field">
+                <span>Спринт</span>
+                <select value={taskForm.sprint_id} onChange={(e) => setTaskForm((prev) => ({ ...prev, sprint_id: e.target.value }))}>
+                  <option value="">Без спринта</option>
+                  {sprints.map((sprint) => (
+                    <option key={sprint.id} value={sprint.id}>
+                      {sprint.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
           <div className="meta">
             <button className="open-btn" type="submit">
