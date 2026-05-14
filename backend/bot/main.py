@@ -1,6 +1,7 @@
 import asyncio
 import io
 import json
+import logging
 import os
 import tempfile
 from urllib.error import HTTPError, URLError
@@ -11,6 +12,9 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 from docx import Document
 from pypdf import PdfReader
+
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
+logger = logging.getLogger(__name__)
 
 
 def build_web_app_keyboard(web_app_url: str) -> InlineKeyboardMarkup:
@@ -148,6 +152,13 @@ def get_whisper_model():
         device = os.getenv("WHISPER_DEVICE", "cpu").strip() or "cpu"
         compute_type = os.getenv("WHISPER_COMPUTE_TYPE", "int8").strip() or "int8"
         download_root = os.getenv("WHISPER_CACHE_DIR", "").strip() or None
+        logger.info(
+            "Loading Whisper model '%s' on device=%s compute_type=%s cache_dir=%s",
+            model_name,
+            device,
+            compute_type,
+            download_root or "<default>",
+        )
         _whisper_model = WhisperModel(
             model_name,
             device=device,
@@ -163,17 +174,33 @@ def transcribe_media_bytes(content: bytes, suffix: str) -> str:
         temp_path = temp_file.name
     try:
         model = get_whisper_model()
-        segments, _info = model.transcribe(
-            temp_path,
-            vad_filter=True,
-            beam_size=1,
-        )
-        chunks = []
-        for segment in segments:
-            text = (segment.text or "").strip()
-            if text:
-                chunks.append(text)
-        return " ".join(chunks).strip()
+        for vad_filter in (True, False):
+            segments, info = model.transcribe(
+                temp_path,
+                vad_filter=vad_filter,
+                beam_size=1,
+            )
+            chunks = []
+            for segment in segments:
+                text = (segment.text or "").strip()
+                if text:
+                    chunks.append(text)
+            transcript = " ".join(chunks).strip()
+            if transcript:
+                logger.info(
+                    "Transcribed media suffix=%s duration=%s language=%s vad_filter=%s text_len=%s",
+                    suffix,
+                    getattr(info, "duration", None),
+                    getattr(info, "language", None),
+                    vad_filter,
+                    len(transcript),
+                )
+                return transcript
+            logger.warning("Whisper returned empty transcript for suffix=%s with vad_filter=%s", suffix, vad_filter)
+        return ""
+    except Exception:
+        logger.exception("Whisper transcription failed for media suffix=%s", suffix)
+        raise
     finally:
         try:
             os.remove(temp_path)
@@ -333,14 +360,23 @@ async def main() -> None:
                 source_type = "voice"
                 voice_bytes = await download_telegram_file_bytes(bot, message.voice.file_id)
                 media_text = transcribe_media_bytes(voice_bytes, ".ogg")
+                if not media_text.strip():
+                    await message.reply("Не удалось распознать речь в голосовом сообщении. Попробуйте записать чуть громче или длиннее.")
+                    return
             elif message.audio:
                 source_type = "audio"
                 audio_bytes = await download_telegram_file_bytes(bot, message.audio.file_id)
                 media_text = transcribe_media_bytes(audio_bytes, ".mp3")
+                if not media_text.strip():
+                    await message.reply("Не удалось распознать речь в аудиофайле. Попробуйте другой файл или добавьте текст сообщением.")
+                    return
             elif message.video:
                 source_type = "video"
                 video_bytes = await download_telegram_file_bytes(bot, message.video.file_id)
                 media_text = transcribe_media_bytes(video_bytes, ".mp4")
+                if not media_text.strip():
+                    await message.reply("Не удалось распознать речь в видео. Попробуйте другой файл или добавьте текст сообщением.")
+                    return
             elif message.photo:
                 source_type = "image"
                 # For image messages we only use caption text to keep pipeline free and stable.
