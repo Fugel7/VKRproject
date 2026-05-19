@@ -336,6 +336,40 @@ async def main() -> None:
     async def ingest_tasks_from_message(message: Message) -> None:
         if not message.from_user or message.from_user.is_bot:
             return
+        service_message_fields = (
+            "new_chat_members",
+            "left_chat_member",
+            "new_chat_title",
+            "new_chat_photo",
+            "delete_chat_photo",
+            "group_chat_created",
+            "supergroup_chat_created",
+            "channel_chat_created",
+            "message_auto_delete_timer_changed",
+            "migrate_to_chat_id",
+            "migrate_from_chat_id",
+            "pinned_message",
+            "forum_topic_created",
+            "forum_topic_edited",
+            "forum_topic_closed",
+            "forum_topic_reopened",
+            "general_forum_topic_hidden",
+            "general_forum_topic_unhidden",
+            "video_chat_scheduled",
+            "video_chat_started",
+            "video_chat_ended",
+            "video_chat_participants_invited",
+            "write_access_allowed",
+            "users_shared",
+            "chat_shared",
+            "proximity_alert_triggered",
+            "boost_added",
+            "chat_background_set",
+            "checklist_tasks_done",
+            "checklist_tasks_added",
+        )
+        if any(getattr(message, field_name, None) is not None for field_name in service_message_fields):
+            return
         base_text = (message.text or message.caption or "").strip()
         if base_text.startswith("/"):
             return
@@ -377,36 +411,29 @@ async def main() -> None:
                 ):
                     document_text = extract_text_from_docx_bytes(doc_bytes)
                 else:
-                    await message.reply(
-                        "Пока поддерживаются файлы TXT/PDF/DOCX. "
-                        "Для других форматов добавьте текст с задачами в подпись."
-                    )
+                    return
             elif message.voice:
                 source_type = "voice"
                 voice_bytes = await download_telegram_file_bytes(bot, message.voice.file_id)
                 media_text = transcribe_media_bytes(voice_bytes, ".ogg")
                 if not media_text.strip():
-                    await message.reply("Не удалось распознать речь в голосовом сообщении. Попробуйте записать чуть громче или длиннее.")
                     return
             elif message.audio:
                 source_type = "audio"
                 audio_bytes = await download_telegram_file_bytes(bot, message.audio.file_id)
                 media_text = transcribe_media_bytes(audio_bytes, ".mp3")
                 if not media_text.strip():
-                    await message.reply("Не удалось распознать речь в аудиофайле. Попробуйте другой файл или добавьте текст сообщением.")
                     return
             elif message.video:
                 source_type = "video"
                 video_bytes = await download_telegram_file_bytes(bot, message.video.file_id)
                 media_text = transcribe_media_bytes(video_bytes, ".mp4")
                 if not media_text.strip():
-                    await message.reply("Не удалось распознать речь в видео. Попробуйте другой файл или добавьте текст сообщением.")
                     return
             elif message.photo:
                 source_type = "image"
                 # For image messages we only use caption text to keep pipeline free and stable.
-        except Exception as exc:  # noqa: BLE001
-            await message.reply(f"Не удалось прочитать вложение: {exc}")
+        except Exception:  # noqa: BLE001
             return
 
         text_parts = []
@@ -419,10 +446,6 @@ async def main() -> None:
         text = "\n\n".join(text_parts).strip()
 
         if not text:
-            await message.reply(
-                "Не удалось получить данные для анализа. "
-                "Добавьте текст/подпись или отправьте файл TXT/PDF/DOCX, либо голосовое/видео."
-            )
             return
 
         # For regular text/caption/image we only react to clearly actionable requests.
@@ -458,11 +481,6 @@ async def main() -> None:
         created = result.get("created_tasks") or []
         created_count = int(result.get("created_count") or 0)
         if created_count <= 0:
-            await message.reply(
-                "Не удалось выделить задачи из этого сообщения. "
-                "Попробуйте сформулировать их более явно, например: "
-                "\"создай задачу: исправить авторизацию, 4 часа\"."
-            )
             return
 
         preview_lines = []
