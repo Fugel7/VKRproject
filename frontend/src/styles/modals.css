@@ -33,13 +33,17 @@
 }
 
 .modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 34px;
   height: 34px;
+  padding: 0;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface-soft);
   color: #42506a;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
 }
@@ -88,8 +92,15 @@
 
 .confirm-actions .back-btn,
 .confirm-actions .open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  min-height: 42px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 14px;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .confirm-cancel-btn {

@@ -32,29 +32,39 @@
 
 .sprint-delete-btn {
   position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   top: 10px;
   right: 10px;
   width: 30px;
   height: 30px;
+  padding: 0;
   border: 0;
   border-radius: 8px;
   background: #ffe4e6;
   color: #b91c1c;
   font-size: 14px;
+  line-height: 1;
   cursor: pointer;
 }
 
 .task-delete-btn {
   position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   top: 8px;
   right: 8px;
   width: 28px;
   height: 28px;
+  padding: 0;
   border: 0;
   border-radius: 8px;
   background: #ffe4e6;
   color: #b91c1c;
   font-size: 13px;
+  line-height: 1;
   cursor: pointer;
 }
 
