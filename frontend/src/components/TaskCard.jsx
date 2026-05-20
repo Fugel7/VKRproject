@@ -38,8 +38,8 @@ export default function TaskCard({
             </span>
           </div>
         </div>
-        <strong>{task.title}</strong>
-        <span>{task.description || 'Без описания'}</span>
+        <strong className="task-title">{task.title}</strong>
+        <span className="task-description">{task.description || 'Без описания'}</span>
       </button>
       <TaskProgressComponent status={task.status} />
     </article>
