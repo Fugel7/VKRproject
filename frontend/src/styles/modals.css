@@ -87,6 +87,13 @@
   flex-wrap: wrap;
 }
 
+.confirm-actions .back-btn,
+.confirm-actions .open-btn {
+  flex: 1 1 160px;
+  min-height: 42px;
+  justify-content: center;
+}
+
 .confirm-cancel-btn {
   background: #e6eef5;
   color: #22324a;
