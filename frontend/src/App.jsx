@@ -78,11 +78,9 @@ function toSprintDateLabel(value) {
 function TaskProgress({ status }) {
   const meta = statusMeta(status);
   return (
-    <div className="progress-wrap">
-      <div className="progress-line">
-        <div className="progress-fill" style={{ width: `${meta.progress}%` }} />
-      </div>
-      <span className="progress-label">{meta.label}</span>
+    <div className={`status-badge status-${status?.toLowerCase() || 'new'}`}>
+      <span className="status-dot" aria-hidden="true" />
+      <span className="status-text">{meta.label}</span>
     </div>
   );
 }
