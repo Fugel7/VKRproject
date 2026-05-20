@@ -96,6 +96,14 @@
   min-width: 0;
 }
 
+.task-topline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
 .task-open strong,
 .sprint-header strong {
   font-size: 15px;
@@ -189,7 +197,7 @@
   align-items: center;
   gap: 8px;
   align-self: flex-start;
-  margin-top: 8px;
+  margin-top: 0;
   padding: 7px 10px;
   border-radius: 999px;
   border: 1px solid transparent;

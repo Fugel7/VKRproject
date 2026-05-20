@@ -28,7 +28,10 @@ export default function TaskCard({
       </button>
       <button type="button" className="task-open" onClick={() => onOpen(task)}>
         <div className="task-headline">
-          <span className="task-kind">Задача</span>
+          <div className="task-topline">
+            <span className="task-kind">Задача</span>
+            <TaskProgressComponent status={task.status} />
+          </div>
           <div className="task-inline-meta">
             <span className="task-chip">v{task.version ?? 1}</span>
             <span className="task-chip">⏱ {executionHoursLabel}</span>
@@ -41,7 +44,6 @@ export default function TaskCard({
         <strong className="task-title">{task.title}</strong>
         <span className="task-description">{task.description || 'Без описания'}</span>
       </button>
-      <TaskProgressComponent status={task.status} />
     </article>
   );
 }
