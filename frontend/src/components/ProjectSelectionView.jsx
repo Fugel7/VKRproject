@@ -34,13 +34,6 @@ export default function ProjectSelectionView({
           )}
           <span className="profile-info">
             <strong>{toDisplayName(authState.user)}</strong>
-            <span>
-              {authState.status === 'loading' && 'Проверяем Telegram авторизацию...'}
-              {authState.status !== 'loading' &&
-                (authState.source === 'telegram_verified' || authState.source === 'telegram_verified_db'
-                  ? 'Telegram: подтверждено'
-                  : 'Telegram: без проверки подписи')}
-            </span>
           </span>
         </button>
 
