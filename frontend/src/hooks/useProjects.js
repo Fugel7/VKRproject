@@ -13,6 +13,7 @@ export function useProjects() {
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [projectsError, setProjectsError] = useState(null);
   const [deletingProjectId, setDeletingProjectId] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState(null);
   const [authState, setAuthState] = useState({
     status: 'loading',
     user: null,
@@ -152,41 +153,53 @@ export function useProjects() {
   const deleteProject = useCallback(
     async (project) => {
       if (!project?.id || !authState.user?.tg_id) return;
-
-      const confirmed = window.confirm(`Удалить проект "${project.title}"?`);
-      if (!confirmed) return;
-
-      try {
-        setDeletingProjectId(project.id);
-        setProjectsError(null);
-
-        const apiBase = getApiBase();
-        const response = await fetch(
-          `${apiBase}/projects/${encodeURIComponent(project.id)}?tg_id=${encodeURIComponent(authState.user.tg_id)}`,
-          { method: 'DELETE' }
-        );
-
-        if (!response.ok) {
-          let details = `Delete failed ${response.status}`;
-          try {
-            const payload = await response.json();
-            if (payload?.detail) details = `${response.status}: ${payload.detail}`;
-          } catch {
-            // keep default details
-          }
-          throw new Error(details);
-        }
-
-        setProjects((prev) => prev.filter((item) => item.id !== project.id));
-        setSelectedProject((prev) => (prev?.id === project.id ? null : prev));
-      } catch (error) {
-        setProjectsError(`Не удалось удалить проект. ${error?.message ?? ''}`.trim());
-      } finally {
-        setDeletingProjectId(null);
-      }
+      setConfirmDialog({
+        id: project.id,
+        title: 'Удалить проект?',
+        message: `Проект "${project.title}" будет удалён без возможности восстановления.`,
+        confirmLabel: 'Удалить проект',
+      });
     },
     [authState.user?.tg_id]
   );
+
+  const cancelConfirmDialog = useCallback(() => {
+    if (deletingProjectId != null) return;
+    setConfirmDialog(null);
+  }, [deletingProjectId]);
+
+  const confirmDeleteProject = useCallback(async () => {
+    if (!confirmDialog?.id || !authState.user?.tg_id) return;
+    try {
+      setDeletingProjectId(confirmDialog.id);
+      setProjectsError(null);
+
+      const apiBase = getApiBase();
+      const response = await fetch(
+        `${apiBase}/projects/${encodeURIComponent(confirmDialog.id)}?tg_id=${encodeURIComponent(authState.user.tg_id)}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) {
+        let details = `Delete failed ${response.status}`;
+        try {
+          const payload = await response.json();
+          if (payload?.detail) details = `${response.status}: ${payload.detail}`;
+        } catch {
+          // keep default details
+        }
+        throw new Error(details);
+      }
+
+      setProjects((prev) => prev.filter((item) => item.id !== confirmDialog.id));
+      setSelectedProject((prev) => (prev?.id === confirmDialog.id ? null : prev));
+      setConfirmDialog(null);
+    } catch (error) {
+      setProjectsError(`Не удалось удалить проект. ${error?.message ?? ''}`.trim());
+    } finally {
+      setDeletingProjectId(null);
+    }
+  }, [confirmDialog, authState.user?.tg_id]);
 
   const openProfile = useCallback(() => {
     if (!authState.user) return;
@@ -218,6 +231,9 @@ export function useProjects() {
     authState,
     visibleProjects,
     deleteProject,
+    confirmDialog,
+    cancelConfirmDialog,
+    confirmDeleteProject,
     openProfile,
   };
 }

@@ -69,3 +69,37 @@
   display: grid;
   gap: 8px;
 }
+
+.confirm-modal {
+  width: min(420px, 100%);
+}
+
+.confirm-message {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.confirm-cancel-btn {
+  background: #e6eef5;
+  color: #22324a;
+}
+
+.confirm-cancel-btn:hover {
+  background: #d6e3ee;
+}
+
+.danger-btn {
+  background: #c03744;
+}
+
+.danger-btn:hover {
+  background: #a92f3b;
+}

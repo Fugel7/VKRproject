@@ -38,6 +38,8 @@ export function useBoard({ selectedProject, tgId }) {
   const [taskHistoryLoading, setTaskHistoryLoading] = useState(false);
   const [showTaskHistoryModal, setShowTaskHistoryModal] = useState(false);
   const [taskReadMap, setTaskReadMap] = useState({});
+  const [confirmDialog, setConfirmDialog] = useState(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
 
   const isTaskDetailsEditing = useMemo(
     () => Object.values(taskDetailsEditing).some(Boolean),
@@ -199,23 +201,14 @@ export function useBoard({ selectedProject, tgId }) {
 
   const deleteSprint = useCallback(async (sprintId, sprintTitle) => {
     if (!tgId || !selectedProject?.id) return;
-    const confirmed = window.confirm(`Удалить спринт "${sprintTitle}"? Задачи останутся и перейдут в общий список.`);
-    if (!confirmed) return;
-    try {
-      const apiBase = getApiBase();
-      const response = await fetch(
-        `${apiBase}/sprints/${encodeURIComponent(sprintId)}?tg_id=${encodeURIComponent(tgId)}`,
-        { method: 'DELETE' }
-      );
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload?.detail || `Sprint delete failed ${response.status}`);
-      }
-      await loadBoard(selectedProject.id, tgId);
-    } catch (error) {
-      setBoardError(`Не удалось удалить спринт. ${error?.message ?? ''}`.trim());
-    }
-  }, [tgId, selectedProject?.id, loadBoard]);
+    setConfirmDialog({
+      kind: 'sprint',
+      id: sprintId,
+      title: 'Удалить спринт?',
+      message: `Спринт "${sprintTitle}" будет удалён. Задачи останутся и перейдут в общий список.`,
+      confirmLabel: 'Удалить спринт',
+    });
+  }, [tgId, selectedProject?.id]);
 
   const closeTaskDetails = useCallback(() => {
     setTaskDetails(null);
@@ -248,24 +241,45 @@ export function useBoard({ selectedProject, tgId }) {
 
   const deleteTask = useCallback(async (taskId, taskTitle) => {
     if (!tgId || !selectedProject?.id) return;
-    const confirmed = window.confirm(`Удалить задачу "${taskTitle}"? Комментарии также будут удалены.`);
-    if (!confirmed) return;
+    setConfirmDialog({
+      kind: 'task',
+      id: taskId,
+      title: 'Удалить задачу?',
+      message: `Задача "${taskTitle}" будет удалена вместе с комментариями.`,
+      confirmLabel: 'Удалить задачу',
+    });
+  }, [tgId, selectedProject?.id]);
+
+  const cancelConfirmDialog = useCallback(() => {
+    if (confirmBusy) return;
+    setConfirmDialog(null);
+  }, [confirmBusy]);
+
+  const confirmDelete = useCallback(async () => {
+    if (!confirmDialog?.id || !tgId || !selectedProject?.id) return;
+    setConfirmBusy(true);
     try {
       const apiBase = getApiBase();
-      const response = await fetch(
-        `${apiBase}/tasks/${encodeURIComponent(taskId)}?tg_id=${encodeURIComponent(tgId)}`,
-        { method: 'DELETE' }
-      );
+      const targetPath =
+        confirmDialog.kind === 'sprint'
+          ? `${apiBase}/sprints/${encodeURIComponent(confirmDialog.id)}?tg_id=${encodeURIComponent(tgId)}`
+          : `${apiBase}/tasks/${encodeURIComponent(confirmDialog.id)}?tg_id=${encodeURIComponent(tgId)}`;
+      const response = await fetch(targetPath, { method: 'DELETE' });
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload?.detail || `Task delete failed ${response.status}`);
+        const entityLabel = confirmDialog.kind === 'sprint' ? 'Sprint' : 'Task';
+        throw new Error(errorPayload?.detail || `${entityLabel} delete failed ${response.status}`);
       }
-      if (taskDetails?.id === taskId) closeTaskDetails();
+      if (confirmDialog.kind === 'task' && taskDetails?.id === confirmDialog.id) closeTaskDetails();
+      setConfirmDialog(null);
       await loadBoard(selectedProject.id, tgId);
     } catch (error) {
-      setBoardError(`Не удалось удалить задачу. ${error?.message ?? ''}`.trim());
+      const prefix = confirmDialog.kind === 'sprint' ? 'Не удалось удалить спринт.' : 'Не удалось удалить задачу.';
+      setBoardError(`${prefix} ${error?.message ?? ''}`.trim());
+    } finally {
+      setConfirmBusy(false);
     }
-  }, [tgId, selectedProject?.id, taskDetails?.id, closeTaskDetails, loadBoard]);
+  }, [confirmDialog, tgId, selectedProject?.id, taskDetails?.id, closeTaskDetails, loadBoard]);
 
   const markTaskCommentsRead = useCallback((taskId, readAt) => {
     const at = toTimeMs(readAt) || Date.now();
@@ -444,6 +458,10 @@ export function useBoard({ selectedProject, tgId }) {
     moveTaskToSprint,
     deleteSprint,
     deleteTask,
+    confirmDialog,
+    confirmBusy,
+    cancelConfirmDialog,
+    confirmDelete,
     taskUnreadCount,
     openTaskDetails,
     closeTaskDetails,

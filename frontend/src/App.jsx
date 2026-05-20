@@ -149,6 +149,10 @@ export default function App() {
         historyEventLabel={historyEventLabel}
         historyFieldLabel={historyFieldLabel}
         historyValueLabel={historyValueLabel}
+        confirmDialog={board.confirmDialog}
+        confirmBusy={board.confirmBusy}
+        onCancelDelete={board.cancelConfirmDialog}
+        onConfirmDelete={board.confirmDelete}
       />
     );
   }
@@ -167,6 +171,9 @@ export default function App() {
       openProfile={projects.openProfile}
       toDisplayName={toDisplayName}
       toInitials={toInitials}
+      confirmDialog={projects.confirmDialog}
+      onCancelDelete={projects.cancelConfirmDialog}
+      onConfirmDelete={projects.confirmDeleteProject}
     />
   );
 }
