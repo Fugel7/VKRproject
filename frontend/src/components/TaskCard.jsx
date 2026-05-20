@@ -24,7 +24,7 @@ export default function TaskCard({
         aria-label="Удалить задачу"
         title="Удалить задачу"
       >
-        x
+        ×
       </button>
       <button type="button" className="task-open" onClick={() => onOpen(task)}>
         <div className="task-headline">

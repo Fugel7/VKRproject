@@ -147,7 +147,7 @@ export default function ProjectBoardView({
                           aria-label="Удалить спринт"
                           title="Удалить спринт"
                         >
-                          x
+                          ×
                         </button>
                         <button type="button" className="sprint-header" onClick={() => toggleSprint(sprint.id, isOpen)}>
                           <strong>{sprint.title}</strong>
