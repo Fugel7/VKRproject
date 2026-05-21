@@ -1,0 +1,2611 @@
+{
+  "cases": [
+    {
+      "id": "clean_001",
+      "category": "clean",
+      "project_title": "CRM для клиники",
+      "input_text": "Добавь кнопку экспорта пациентов в Excel на странице списка.",
+      "expected_tasks": [
+        {
+          "title": "Добавить кнопку экспорта пациентов в Excel на странице списка",
+          "description": "Добавь кнопку экспорта пациентов в Excel на странице списка",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_002",
+      "category": "clean",
+      "project_title": "Интернет-магазин",
+      "input_text": "Исправь отображение цены со скидкой в карточке товара.",
+      "expected_tasks": [
+        {
+          "title": "Исправить отображение цены со скидкой в карточке товара",
+          "description": "Исправь отображение цены со скидкой в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_003",
+      "category": "clean",
+      "project_title": "Telegram mini app",
+      "input_text": "Сделай поиск задач по названию проекта.",
+      "expected_tasks": [
+        {
+          "title": "Сделать поиск задач по названию проекта",
+          "description": "Сделай поиск задач по названию проекта",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_004",
+      "category": "clean",
+      "project_title": "Платформа аналитики",
+      "input_text": "Добавь фильтр по периоду в отчет по продажам.",
+      "expected_tasks": [
+        {
+          "title": "Добавить фильтр по периоду в отчет по продажам",
+          "description": "Добавь фильтр по периоду в отчет по продажам",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_005",
+      "category": "clean",
+      "project_title": "Сервис доставки",
+      "input_text": "Нужно починить создание заказа из корзины.",
+      "expected_tasks": [
+        {
+          "title": "Починить создание заказа из корзины",
+          "description": "Нужно починить создание заказа из корзины",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_006",
+      "category": "clean",
+      "project_title": "Система бронирования",
+      "input_text": "Сделай валидацию номера телефона в форме бронирования.",
+      "expected_tasks": [
+        {
+          "title": "Сделать валидацию номера телефона в форме бронирования",
+          "description": "Сделай валидацию номера телефона в форме бронирования",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_007",
+      "category": "clean",
+      "project_title": "HR платформа",
+      "input_text": "Добавь сортировку кандидатов по дате отклика.",
+      "expected_tasks": [
+        {
+          "title": "Добавить сортировку кандидатов по дате отклика",
+          "description": "Добавь сортировку кандидатов по дате отклика",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_008",
+      "category": "clean",
+      "project_title": "Финансовый дашборд",
+      "input_text": "Исправь округление сумм в виджете баланса.",
+      "expected_tasks": [
+        {
+          "title": "Исправить округление сумм в виджете баланса",
+          "description": "Исправь округление сумм в виджете баланса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_009",
+      "category": "clean",
+      "project_title": "SaaS платформа",
+      "input_text": "Добавь страницу тарифов с таблицей сравнения планов.",
+      "expected_tasks": [
+        {
+          "title": "Добавить страницу тарифов с таблицей сравнения планов",
+          "description": "Добавь страницу тарифов с таблицей сравнения планов",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_010",
+      "category": "clean",
+      "project_title": "Маркетплейс",
+      "input_text": "Почини загрузку изображений в форме добавления товара.",
+      "expected_tasks": [
+        {
+          "title": "Починить загрузку изображений в форме добавления товара",
+          "description": "Почини загрузку изображений в форме добавления товара",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_011",
+      "category": "clean",
+      "project_title": "CRM для агентства",
+      "input_text": "Добавь комментарии к задачам в карточке сделки.",
+      "expected_tasks": [
+        {
+          "title": "Добавить комментарии к задачам в карточке сделки",
+          "description": "Добавь комментарии к задачам в карточке сделки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_012",
+      "category": "clean",
+      "project_title": "Медицинский кабинет",
+      "input_text": "Сделай уведомление об успешном сохранении записи пациента.",
+      "expected_tasks": [
+        {
+          "title": "Сделать уведомление об успешном сохранении записи пациента",
+          "description": "Сделай уведомление об успешном сохранении записи пациента",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_013",
+      "category": "clean",
+      "project_title": "Образовательная платформа",
+      "input_text": "Добавь прогресс-бар прохождения курса в личный кабинет.",
+      "expected_tasks": [
+        {
+          "title": "Добавить прогресс-бар прохождения курса в личный кабинет",
+          "description": "Добавь прогресс-бар прохождения курса в личный кабинет",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_014",
+      "category": "clean",
+      "project_title": "Чат поддержки",
+      "input_text": "Исправь открытие вложений в окне переписки.",
+      "expected_tasks": [
+        {
+          "title": "Исправить открытие вложений в окне переписки",
+          "description": "Исправь открытие вложений в окне переписки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_015",
+      "category": "clean",
+      "project_title": "Сервис подписок",
+      "input_text": "Нужно добавить историю списаний в профиль пользователя.",
+      "expected_tasks": [
+        {
+          "title": "Добавить историю списаний в профиль пользователя",
+          "description": "Нужно добавить историю списаний в профиль пользователя",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_016",
+      "category": "clean",
+      "project_title": "Личный кабинет клиента",
+      "input_text": "Сделай кнопку копирования API ключа.",
+      "expected_tasks": [
+        {
+          "title": "Сделать кнопку копирования API ключа",
+          "description": "Сделай кнопку копирования API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_017",
+      "category": "clean",
+      "project_title": "Платформа вебинаров",
+      "input_text": "Добавь таймер до начала вебинара на лендинг.",
+      "expected_tasks": [
+        {
+          "title": "Добавить таймер до начала вебинара на лендинг",
+          "description": "Добавь таймер до начала вебинара на лендинг",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_018",
+      "category": "clean",
+      "project_title": "Складская система",
+      "input_text": "Исправь пересчет остатков после возврата товара.",
+      "expected_tasks": [
+        {
+          "title": "Исправить пересчет остатков после возврата товара",
+          "description": "Исправь пересчет остатков после возврата товара",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_019",
+      "category": "clean",
+      "project_title": "Платформа опросов",
+      "input_text": "Добавь предпросмотр формы перед публикацией.",
+      "expected_tasks": [
+        {
+          "title": "Добавить предпросмотр формы перед публикацией",
+          "description": "Добавь предпросмотр формы перед публикацией",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_020",
+      "category": "clean",
+      "project_title": "Система логистики",
+      "input_text": "Почини отображение маршрута на карте доставки.",
+      "expected_tasks": [
+        {
+          "title": "Починить отображение маршрута на карте доставки",
+          "description": "Почини отображение маршрута на карте доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_021",
+      "category": "clean",
+      "project_title": "Бухгалтерский сервис",
+      "input_text": "Добавь выгрузку счета в PDF.",
+      "expected_tasks": [
+        {
+          "title": "Добавить выгрузку счета в PDF",
+          "description": "Добавь выгрузку счета в PDF",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_022",
+      "category": "clean",
+      "project_title": "CRM для застройщика",
+      "input_text": "Исправь фильтр лидов по менеджеру.",
+      "expected_tasks": [
+        {
+          "title": "Исправить фильтр лидов по менеджеру",
+          "description": "Исправь фильтр лидов по менеджеру",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_023",
+      "category": "clean",
+      "project_title": "Портал партнеров",
+      "input_text": "Сделай страницу документации по интеграции API.",
+      "expected_tasks": [
+        {
+          "title": "Сделать страницу документации по интеграции API",
+          "description": "Сделай страницу документации по интеграции API",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_024",
+      "category": "clean",
+      "project_title": "Сервис онлайн-записи",
+      "input_text": "Добавь автоподстановку города в форме адреса.",
+      "expected_tasks": [
+        {
+          "title": "Добавить автоподстановку города в форме адреса",
+          "description": "Добавь автоподстановку города в форме адреса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_025",
+      "category": "clean",
+      "project_title": "Система обучения",
+      "input_text": "Исправь сохранение ответов в тесте после перезагрузки страницы.",
+      "expected_tasks": [
+        {
+          "title": "Исправить сохранение ответов в тесте после перезагрузки страницы",
+          "description": "Исправь сохранение ответов в тесте после перезагрузки страницы",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_026",
+      "category": "noise_profanity",
+      "project_title": "CRM для клиники",
+      "input_text": "Черт, опять сломалась форма записи, почини отправку и добавь маску телефона.",
+      "expected_tasks": [
+        {
+          "title": "Починить отправку формы записи",
+          "description": "Почини отправку формы записи",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить маску телефона",
+          "description": "Добавить маску телефона",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_027",
+      "category": "noise_profanity",
+      "project_title": "Интернет-магазин",
+      "input_text": "Бесит, карточка товара опять кривая, поправь галерею и цену доставки.",
+      "expected_tasks": [
+        {
+          "title": "Поправить галерею в карточке товара",
+          "description": "Поправь галерею в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить цену доставки",
+          "description": "Поправь цену доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_028",
+      "category": "noise_profanity",
+      "project_title": "Telegram mini app",
+      "input_text": "Да е-мое, сделай уже поиск задач и почини создание спринта.",
+      "expected_tasks": [
+        {
+          "title": "Сделать поиск задач",
+          "description": "Сделай поиск задач",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить создание спринта",
+          "description": "Почини создание спринта",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_029",
+      "category": "noise_profanity",
+      "project_title": "Платформа аналитики",
+      "input_text": "Черт возьми, экспорт опять отвалился, исправь Excel и CSV выгрузку.",
+      "expected_tasks": [
+        {
+          "title": "Исправить Excel выгрузку",
+          "description": "Исправь Excel выгрузку",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить CSV выгрузку",
+          "description": "Исправь CSV выгрузку",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_030",
+      "category": "noise_profanity",
+      "project_title": "Сервис доставки",
+      "input_text": "Блин, это ад, поправь адрес доставки и расчет времени приезда.",
+      "expected_tasks": [
+        {
+          "title": "Поправить адрес доставки",
+          "description": "Поправь адрес доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить расчет времени приезда",
+          "description": "Поправь расчет времени приезда",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_031",
+      "category": "noise_profanity",
+      "project_title": "Система бронирования",
+      "input_text": "Как же задолбала эта форма, исправь выбор даты и блокировку занятых слотов.",
+      "expected_tasks": [
+        {
+          "title": "Исправить выбор даты",
+          "description": "Исправь выбор даты",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить блокировку занятых слотов",
+          "description": "Исправь блокировку занятых слотов",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_032",
+      "category": "noise_profanity",
+      "project_title": "HR платформа",
+      "input_text": "Черт, фильтры кандидатов работают через раз, почини поиск и сортировку.",
+      "expected_tasks": [
+        {
+          "title": "Починить поиск кандидатов",
+          "description": "Почини поиск кандидатов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить сортировку кандидатов",
+          "description": "Почини сортировку кандидатов",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_033",
+      "category": "noise_profanity",
+      "project_title": "Финансовый дашборд",
+      "input_text": "Да что за фигня, график скачет, исправь ось времени и подписи сумм.",
+      "expected_tasks": [
+        {
+          "title": "Исправить ось времени на графике",
+          "description": "Исправь ось времени на графике",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить подписи сумм",
+          "description": "Исправь подписи сумм",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_034",
+      "category": "noise_profanity",
+      "project_title": "SaaS платформа",
+      "input_text": "Блин, страница тарифов выглядит ужасно, поправь таблицу и кнопку оплаты.",
+      "expected_tasks": [
+        {
+          "title": "Поправить таблицу тарифов",
+          "description": "Поправь таблицу тарифов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить кнопку оплаты",
+          "description": "Поправь кнопку оплаты",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_035",
+      "category": "noise_profanity",
+      "project_title": "Маркетплейс",
+      "input_text": "Елки-палки, загрузка фото тупит, почини предпросмотр и удаление картинок.",
+      "expected_tasks": [
+        {
+          "title": "Починить предпросмотр картинок",
+          "description": "Почини предпросмотр картинок",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить удаление картинок",
+          "description": "Почини удаление картинок",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_036",
+      "category": "noise_profanity",
+      "project_title": "CRM для агентства",
+      "input_text": "Черт, комментарии в сделке пропадают, исправь сохранение и подгрузку.",
+      "expected_tasks": [
+        {
+          "title": "Исправить сохранение комментариев в сделке",
+          "description": "Исправь сохранение комментариев в сделке",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить подгрузку комментариев в сделке",
+          "description": "Исправь подгрузку комментариев в сделке",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_037",
+      "category": "noise_profanity",
+      "project_title": "Медицинский кабинет",
+      "input_text": "Да блин, уведомления не приходят, почини тосты и звук напоминания.",
+      "expected_tasks": [
+        {
+          "title": "Починить тосты уведомлений",
+          "description": "Почини тосты уведомлений",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить звук напоминания",
+          "description": "Почини звук напоминания",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_038",
+      "category": "noise_profanity",
+      "project_title": "Образовательная платформа",
+      "input_text": "Черт, прогресс курса не сохраняется, исправь запись процентов и обновление экрана.",
+      "expected_tasks": [
+        {
+          "title": "Исправить сохранение прогресса курса",
+          "description": "Исправь запись процентов прогресса курса",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить обновление экрана прогресса курса",
+          "description": "Исправь обновление экрана прогресса курса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_039",
+      "category": "noise_profanity",
+      "project_title": "Чат поддержки",
+      "input_text": "Блин, вложения открываются через одно место, поправь просмотр и скачивание файлов.",
+      "expected_tasks": [
+        {
+          "title": "Поправить просмотр вложений",
+          "description": "Поправь просмотр вложений",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить скачивание файлов",
+          "description": "Поправь скачивание файлов",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_040",
+      "category": "noise_profanity",
+      "project_title": "Сервис подписок",
+      "input_text": "Черт подери, история платежей пустая, добавь список списаний и даты операций.",
+      "expected_tasks": [
+        {
+          "title": "Добавить список списаний",
+          "description": "Добавь список списаний",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить даты операций",
+          "description": "Добавь даты операций",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_041",
+      "category": "noise_profanity",
+      "project_title": "Личный кабинет клиента",
+      "input_text": "Да что ж такое, кнопка копирования ключа не работает, исправь копирование и текст подсказки.",
+      "expected_tasks": [
+        {
+          "title": "Исправить копирование API ключа",
+          "description": "Исправь копирование API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить текст подсказки для API ключа",
+          "description": "Исправь текст подсказки для API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_042",
+      "category": "noise_profanity",
+      "project_title": "Платформа вебинаров",
+      "input_text": "Бесит, таймер на лендинге врёт, поправь дату старта и обратный отсчет.",
+      "expected_tasks": [
+        {
+          "title": "Поправить дату старта в таймере",
+          "description": "Поправь дату старта в таймере",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить обратный отсчет таймера",
+          "description": "Поправь обратный отсчет таймера",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_043",
+      "category": "noise_profanity",
+      "project_title": "Складская система",
+      "input_text": "Черт, остатки считаются криво, исправь возврат и обновление таблицы склада.",
+      "expected_tasks": [
+        {
+          "title": "Исправить возврат товара на складе",
+          "description": "Исправь возврат товара на складе",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить обновление таблицы склада",
+          "description": "Исправь обновление таблицы склада",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_044",
+      "category": "noise_profanity",
+      "project_title": "Платформа опросов",
+      "input_text": "Да блин, предпросмотр формы отваливается, почини рендер и кнопку публикации.",
+      "expected_tasks": [
+        {
+          "title": "Починить рендер предпросмотра формы",
+          "description": "Почини рендер предпросмотра формы",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить кнопку публикации формы",
+          "description": "Почини кнопку публикации формы",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_045",
+      "category": "noise_profanity",
+      "project_title": "Система логистики",
+      "input_text": "Черт, карта доставки тупит, исправь маркеры и обновление маршрута.",
+      "expected_tasks": [
+        {
+          "title": "Исправить маркеры на карте доставки",
+          "description": "Исправь маркеры на карте доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить обновление маршрута доставки",
+          "description": "Исправь обновление маршрута доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_046",
+      "category": "noise_emoji",
+      "project_title": "Бухгалтерский сервис",
+      "input_text": "Пожалуйста 🙏 добавь выгрузку счета в PDF и кнопку печати 🧾",
+      "expected_tasks": [
+        {
+          "title": "Добавить выгрузку счета в PDF",
+          "description": "Добавь выгрузку счета в PDF",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить кнопку печати счета",
+          "description": "Добавь кнопку печати счета",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_047",
+      "category": "noise_emoji",
+      "project_title": "CRM для застройщика",
+      "input_text": "Нужно ✨ поправить фильтр лидов по менеджеру и добавить поиск по ЖК 🔎",
+      "expected_tasks": [
+        {
+          "title": "Поправить фильтр лидов по менеджеру",
+          "description": "Поправить фильтр лидов по менеджеру",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить поиск по ЖК",
+          "description": "Добавить поиск по ЖК",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_048",
+      "category": "noise_emoji",
+      "project_title": "Портал партнеров",
+      "input_text": "Сделай страницу документации по API 📚 и добавь примеры запросов 💡",
+      "expected_tasks": [
+        {
+          "title": "Сделать страницу документации по API",
+          "description": "Сделай страницу документации по API",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить примеры запросов API",
+          "description": "Добавь примеры запросов API",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_049",
+      "category": "noise_emoji",
+      "project_title": "Сервис онлайн-записи",
+      "input_text": "Добавь автоподстановку города 🌍 и подсказки в поле адреса 📝",
+      "expected_tasks": [
+        {
+          "title": "Добавить автоподстановку города",
+          "description": "Добавь автоподстановку города",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить подсказки в поле адреса",
+          "description": "Добавь подсказки в поле адреса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_050",
+      "category": "noise_emoji",
+      "project_title": "Система обучения",
+      "input_text": "Исправь сохранение ответов в тесте ✅ и прогресс после перезагрузки 🔄",
+      "expected_tasks": [
+        {
+          "title": "Исправить сохранение ответов в тесте",
+          "description": "Исправь сохранение ответов в тесте",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить прогресс после перезагрузки",
+          "description": "Исправь прогресс после перезагрузки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_051",
+      "category": "noise_emoji",
+      "project_title": "CRM для клиники",
+      "input_text": "Добавь экспорт пациентов в Excel 📊 и фильтр по врачу 🩺",
+      "expected_tasks": [
+        {
+          "title": "Добавить экспорт пациентов в Excel",
+          "description": "Добавь экспорт пациентов в Excel",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить фильтр по врачу",
+          "description": "Добавь фильтр по врачу",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_052",
+      "category": "noise_emoji",
+      "project_title": "Интернет-магазин",
+      "input_text": "Почини скидочную цену 💸 и блок рекомендаций в карточке товара 🛍️",
+      "expected_tasks": [
+        {
+          "title": "Починить скидочную цену в карточке товара",
+          "description": "Почини скидочную цену в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить блок рекомендаций в карточке товара",
+          "description": "Почини блок рекомендаций в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_053",
+      "category": "noise_emoji",
+      "project_title": "Telegram mini app",
+      "input_text": "Сделай поиск задач 🔎 и фильтр по статусу 📌",
+      "expected_tasks": [
+        {
+          "title": "Сделать поиск задач",
+          "description": "Сделай поиск задач",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать фильтр задач по статусу",
+          "description": "Сделай фильтр задач по статусу",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_054",
+      "category": "noise_emoji",
+      "project_title": "Платформа аналитики",
+      "input_text": "Добавь дашборд по продажам 📈 и экспорт в Excel 📤",
+      "expected_tasks": [
+        {
+          "title": "Добавить дашборд по продажам",
+          "description": "Добавь дашборд по продажам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить экспорт в Excel",
+          "description": "Добавь экспорт в Excel",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_055",
+      "category": "noise_emoji",
+      "project_title": "Сервис доставки",
+      "input_text": "Исправь время доставки ⏱️ и отображение статуса курьера 🚚",
+      "expected_tasks": [
+        {
+          "title": "Исправить время доставки",
+          "description": "Исправь время доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить отображение статуса курьера",
+          "description": "Исправь отображение статуса курьера",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_056",
+      "category": "noise_emoji",
+      "project_title": "Система бронирования",
+      "input_text": "Сделай выбор даты удобнее 📅 и подсвети свободные слоты ✨",
+      "expected_tasks": [
+        {
+          "title": "Сделать выбор даты удобнее",
+          "description": "Сделай выбор даты удобнее",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Подсветить свободные слоты",
+          "description": "Подсвети свободные слоты",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_057",
+      "category": "noise_emoji",
+      "project_title": "HR платформа",
+      "input_text": "Добавь поиск кандидатов 🔍 и экспорт резюме в PDF 📄",
+      "expected_tasks": [
+        {
+          "title": "Добавить поиск кандидатов",
+          "description": "Добавь поиск кандидатов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить экспорт резюме в PDF",
+          "description": "Добавь экспорт резюме в PDF",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_058",
+      "category": "noise_emoji",
+      "project_title": "Финансовый дашборд",
+      "input_text": "Исправь подписи сумм 💰 и легенду графика 📊",
+      "expected_tasks": [
+        {
+          "title": "Исправить подписи сумм",
+          "description": "Исправь подписи сумм",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить легенду графика",
+          "description": "Исправь легенду графика",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_059",
+      "category": "noise_emoji",
+      "project_title": "SaaS платформа",
+      "input_text": "Добавь страницу тарифов 💼 и форму запроса демо 🎯",
+      "expected_tasks": [
+        {
+          "title": "Добавить страницу тарифов",
+          "description": "Добавь страницу тарифов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить форму запроса демо",
+          "description": "Добавь форму запроса демо",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_060",
+      "category": "noise_emoji",
+      "project_title": "Маркетплейс",
+      "input_text": "Почини загрузку фото 📷 и сортировку товаров по цене 💵",
+      "expected_tasks": [
+        {
+          "title": "Починить загрузку фото",
+          "description": "Почини загрузку фото",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить сортировку товаров по цене",
+          "description": "Почини сортировку товаров по цене",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_061",
+      "category": "noise_emoji",
+      "project_title": "CRM для агентства",
+      "input_text": "Добавь комментарии к сделке 💬 и историю изменений 🕘",
+      "expected_tasks": [
+        {
+          "title": "Добавить комментарии к сделке",
+          "description": "Добавь комментарии к сделке",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить историю изменений сделки",
+          "description": "Добавь историю изменений сделки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_062",
+      "category": "noise_emoji",
+      "project_title": "Медицинский кабинет",
+      "input_text": "Сделай уведомление о записи 🔔 и напоминание за день ⏰",
+      "expected_tasks": [
+        {
+          "title": "Сделать уведомление о записи",
+          "description": "Сделай уведомление о записи",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать напоминание за день",
+          "description": "Сделай напоминание за день",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_063",
+      "category": "noise_emoji",
+      "project_title": "Образовательная платформа",
+      "input_text": "Добавь прогресс курса 📚 и бейдж завершения 🏁",
+      "expected_tasks": [
+        {
+          "title": "Добавить прогресс курса",
+          "description": "Добавь прогресс курса",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить бейдж завершения курса",
+          "description": "Добавь бейдж завершения курса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_064",
+      "category": "noise_emoji",
+      "project_title": "Чат поддержки",
+      "input_text": "Исправь вложения 📎 и предпросмотр изображений 🖼️",
+      "expected_tasks": [
+        {
+          "title": "Исправить вложения",
+          "description": "Исправь вложения",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить предпросмотр изображений",
+          "description": "Исправь предпросмотр изображений",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_065",
+      "category": "noise_emoji",
+      "project_title": "Сервис подписок",
+      "input_text": "Добавь историю списаний 💳 и статус оплаты ✅",
+      "expected_tasks": [
+        {
+          "title": "Добавить историю списаний",
+          "description": "Добавь историю списаний",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить статус оплаты",
+          "description": "Добавь статус оплаты",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_066",
+      "category": "mixed_context",
+      "project_title": "CRM для клиники",
+      "input_text": "После встречи нужно купить чай, согласовать отпуск и добавить экспорт пациентов в Excel.",
+      "expected_tasks": [
+        {
+          "title": "Добавить экспорт пациентов в Excel",
+          "description": "Добавить экспорт пациентов в Excel",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_067",
+      "category": "mixed_context",
+      "project_title": "Интернет-магазин",
+      "input_text": "Закажи пиццу на команду, а еще поправь скидочную цену и блок рекомендаций в карточке товара.",
+      "expected_tasks": [
+        {
+          "title": "Поправить скидочную цену в карточке товара",
+          "description": "Поправить скидочную цену в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить блок рекомендаций в карточке товара",
+          "description": "Поправить блок рекомендаций в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_068",
+      "category": "mixed_context",
+      "project_title": "Telegram mini app",
+      "input_text": "Не забудь поздравить Олега с днем рождения и сделать поиск задач по названию проекта.",
+      "expected_tasks": [
+        {
+          "title": "Сделать поиск задач по названию проекта",
+          "description": "Сделать поиск задач по названию проекта",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_069",
+      "category": "mixed_context",
+      "project_title": "Платформа аналитики",
+      "input_text": "На выходных поедем на дачу, а в продукте нужно добавить фильтр по периоду и экспорт отчета.",
+      "expected_tasks": [
+        {
+          "title": "Добавить фильтр по периоду",
+          "description": "Добавить фильтр по периоду",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить экспорт отчета",
+          "description": "Добавить экспорт отчета",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_070",
+      "category": "mixed_context",
+      "project_title": "Сервис доставки",
+      "input_text": "Купи хлеб и молоко, а потом почини создание заказа и расчет времени доставки.",
+      "expected_tasks": [
+        {
+          "title": "Починить создание заказа",
+          "description": "Починить создание заказа",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить расчет времени доставки",
+          "description": "Починить расчет времени доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_071",
+      "category": "mixed_context",
+      "project_title": "Система бронирования",
+      "input_text": "Забронируй столик на пятницу и сделай валидацию номера телефона в форме бронирования.",
+      "expected_tasks": [
+        {
+          "title": "Сделать валидацию номера телефона в форме бронирования",
+          "description": "Сделать валидацию номера телефона в форме бронирования",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_072",
+      "category": "mixed_context",
+      "project_title": "HR платформа",
+      "input_text": "С утра обсудим найм, а в системе нужно добавить сортировку кандидатов и экспорт резюме в PDF.",
+      "expected_tasks": [
+        {
+          "title": "Добавить сортировку кандидатов",
+          "description": "Добавить сортировку кандидатов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить экспорт резюме в PDF",
+          "description": "Добавить экспорт резюме в PDF",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_073",
+      "category": "mixed_context",
+      "project_title": "Финансовый дашборд",
+      "input_text": "Нужно забрать заказ из магазина и исправить округление сумм в виджете баланса.",
+      "expected_tasks": [
+        {
+          "title": "Исправить округление сумм в виджете баланса",
+          "description": "Исправить округление сумм в виджете баланса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_074",
+      "category": "mixed_context",
+      "project_title": "SaaS платформа",
+      "input_text": "Мемы потом, а сейчас добавь страницу тарифов и форму запроса демо.",
+      "expected_tasks": [
+        {
+          "title": "Добавить страницу тарифов",
+          "description": "Добавить страницу тарифов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить форму запроса демо",
+          "description": "Добавить форму запроса демо",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_075",
+      "category": "mixed_context",
+      "project_title": "Маркетплейс",
+      "input_text": "Завтра шашлыки, а сегодня почини загрузку фото и удаление картинок в форме товара.",
+      "expected_tasks": [
+        {
+          "title": "Починить загрузку фото в форме товара",
+          "description": "Починить загрузку фото в форме товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить удаление картинок в форме товара",
+          "description": "Починить удаление картинок в форме товара",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_076",
+      "category": "mixed_context",
+      "project_title": "CRM для агентства",
+      "input_text": "Кинь ссылку на кафе и еще добавь комментарии к сделке и историю изменений.",
+      "expected_tasks": [
+        {
+          "title": "Добавить комментарии к сделке",
+          "description": "Добавить комментарии к сделке",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить историю изменений сделки",
+          "description": "Добавить историю изменений сделки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_077",
+      "category": "mixed_context",
+      "project_title": "Медицинский кабинет",
+      "input_text": "Запишись к стоматологу и сделай уведомление об успешном сохранении записи пациента.",
+      "expected_tasks": [
+        {
+          "title": "Сделать уведомление об успешном сохранении записи пациента",
+          "description": "Сделать уведомление об успешном сохранении записи пациента",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_078",
+      "category": "mixed_context",
+      "project_title": "Образовательная платформа",
+      "input_text": "На выходных кино, а по проекту надо добавить прогресс-бар курса и бейдж завершения.",
+      "expected_tasks": [
+        {
+          "title": "Добавить прогресс-бар курса",
+          "description": "Добавить прогресс-бар курса",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить бейдж завершения курса",
+          "description": "Добавить бейдж завершения курса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_079",
+      "category": "mixed_context",
+      "project_title": "Чат поддержки",
+      "input_text": "Погнали на обед, а потом исправь открытие вложений и предпросмотр изображений.",
+      "expected_tasks": [
+        {
+          "title": "Исправить открытие вложений",
+          "description": "Исправить открытие вложений",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить предпросмотр изображений",
+          "description": "Исправить предпросмотр изображений",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_080",
+      "category": "mixed_context",
+      "project_title": "Сервис подписок",
+      "input_text": "Созвонись с банком и добавь историю списаний вместе со статусом оплаты.",
+      "expected_tasks": [
+        {
+          "title": "Добавить историю списаний",
+          "description": "Добавить историю списаний",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить статус оплаты",
+          "description": "Добавить статус оплаты",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_081",
+      "category": "mixed_context",
+      "project_title": "Личный кабинет клиента",
+      "input_text": "Сначала кофе, потом сделай кнопку копирования API ключа и текст подсказки.",
+      "expected_tasks": [
+        {
+          "title": "Сделать кнопку копирования API ключа",
+          "description": "Сделать кнопку копирования API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать текст подсказки для API ключа",
+          "description": "Сделать текст подсказки для API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_082",
+      "category": "mixed_context",
+      "project_title": "Платформа вебинаров",
+      "input_text": "Купи батарейки для мышки и добавь таймер до начала вебинара на лендинг.",
+      "expected_tasks": [
+        {
+          "title": "Добавить таймер до начала вебинара на лендинг",
+          "description": "Добавить таймер до начала вебинара на лендинг",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_083",
+      "category": "mixed_context",
+      "project_title": "Складская система",
+      "input_text": "После тренировки проверь почту и исправь пересчет остатков после возврата товара.",
+      "expected_tasks": [
+        {
+          "title": "Исправить пересчет остатков после возврата товара",
+          "description": "Исправить пересчет остатков после возврата товара",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_084",
+      "category": "mixed_context",
+      "project_title": "Платформа опросов",
+      "input_text": "Надо купить скотч и добавить предпросмотр формы перед публикацией.",
+      "expected_tasks": [
+        {
+          "title": "Добавить предпросмотр формы перед публикацией",
+          "description": "Добавить предпросмотр формы перед публикацией",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_085",
+      "category": "mixed_context",
+      "project_title": "Система логистики",
+      "input_text": "Закажи кофе, а в системе почини отображение маршрута и маркеров на карте доставки.",
+      "expected_tasks": [
+        {
+          "title": "Починить отображение маршрута на карте доставки",
+          "description": "Починить отображение маршрута на карте доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить маркеры на карте доставки",
+          "description": "Починить маркеры на карте доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "offtopic_086",
+      "category": "offtopic",
+      "project_title": "CRM для клиники",
+      "input_text": "Купи молоко, хлеб и бумажные полотенца.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_087",
+      "category": "offtopic",
+      "project_title": "Интернет-магазин",
+      "input_text": "Кто идет на обед и где будем есть?",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_088",
+      "category": "offtopic",
+      "project_title": "Telegram mini app",
+      "input_text": "Поздравьте Лену с днем рождения в чате.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_089",
+      "category": "offtopic",
+      "project_title": "Платформа аналитики",
+      "input_text": "Давайте вечером посмотрим фильм и поиграем в настолки.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_090",
+      "category": "offtopic",
+      "project_title": "Сервис доставки",
+      "input_text": "Нужно заказать воду в офис и вынести мусор.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_091",
+      "category": "offtopic",
+      "project_title": "Система бронирования",
+      "input_text": "Напомни мне позвонить маме и купить подарок.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_092",
+      "category": "offtopic",
+      "project_title": "HR платформа",
+      "input_text": "Скиньте мемы с созвона и фото доски.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_093",
+      "category": "offtopic",
+      "project_title": "Финансовый дашборд",
+      "input_text": "Сегодня сокращенный день, уходим пораньше.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_094",
+      "category": "offtopic",
+      "project_title": "SaaS платформа",
+      "input_text": "Закажи такси до аэропорта и забронируй отель.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_095",
+      "category": "offtopic",
+      "project_title": "Маркетплейс",
+      "input_text": "Киньте адрес ресторана и время встречи.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_096",
+      "category": "offtopic",
+      "project_title": "CRM для агентства",
+      "input_text": "Купи чай, кофе и печенье в офис.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_097",
+      "category": "offtopic",
+      "project_title": "Медицинский кабинет",
+      "input_text": "Не забудьте закрыть окно и выключить свет.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_098",
+      "category": "offtopic",
+      "project_title": "Образовательная платформа",
+      "input_text": "Кто сможет взять кота на выходные?",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_099",
+      "category": "offtopic",
+      "project_title": "Чат поддержки",
+      "input_text": "Погода сегодня огонь, идем гулять после работы.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_100",
+      "category": "offtopic",
+      "project_title": "Сервис подписок",
+      "input_text": "Напомните мне оплатить интернет дома.",
+      "expected_tasks": []
+    },
+    {
+      "id": "long_clean_101",
+      "category": "long_clean",
+      "project_title": "CRM для клиники",
+      "input_text": "По итогам обсуждения с администраторами клиники выяснилось, что в текущем интерфейсе сотрудникам неудобно искать нужных пациентов, потому что список слишком длинный, фильтров мало, а экспорт приходится делать вручную через обходные сценарии. Нужно в рамках ближайшего релиза добавить поиск по пациентам по имени и номеру телефона, а также сделать экспорт списка пациентов в Excel прямо со страницы реестра.",
+      "expected_tasks": [
+        {
+          "title": "Добавить поиск по пациентам по имени и номеру телефона",
+          "description": "Добавить поиск по пациентам по имени и номеру телефона",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать экспорт списка пациентов в Excel со страницы реестра",
+          "description": "Сделать экспорт списка пациентов в Excel со страницы реестра",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_102",
+      "category": "long_clean",
+      "project_title": "Интернет-магазин",
+      "input_text": "После анализа поведения пользователей на карточке товара стало понятно, что люди не видят финальную цену, путаются в размере скидки и часто не понимают, сколько реально стоит доставка. Надо исправить отображение цены со скидкой в карточке товара, а ещё отдельно вывести стоимость доставки рядом с блоком покупки, чтобы это было заметно без прокрутки.",
+      "expected_tasks": [
+        {
+          "title": "Исправить отображение цены со скидкой в карточке товара",
+          "description": "Исправить отображение цены со скидкой в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести стоимость доставки рядом с блоком покупки",
+          "description": "Вывести стоимость доставки рядом с блоком покупки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_103",
+      "category": "long_clean",
+      "project_title": "Telegram mini app",
+      "input_text": "В мини-приложении по задачам сейчас неудобно ориентироваться, когда в проекте уже накопилось много элементов, особенно если пользователь заходит спустя несколько дней и не помнит точные формулировки. Поэтому нужно добавить поиск задач по названию проекта и задачам, а также сделать отдельный фильтр по статусу, чтобы можно было быстро переключаться между новыми, активными и завершенными задачами.",
+      "expected_tasks": [
+        {
+          "title": "Добавить поиск по названию проекта и задачам",
+          "description": "Добавить поиск по названию проекта и задачам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать фильтр задач по статусу",
+          "description": "Сделать фильтр задач по статусу",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_104",
+      "category": "long_clean",
+      "project_title": "Платформа аналитики",
+      "input_text": "Команда продаж пожаловалась, что текущие отчеты неудобны для еженедельного анализа: нельзя быстро ограничить период, а после этого ещё и экспорт приходится заказывать у аналитика вручную. Нужно добавить фильтр по периоду в отчет по продажам и сделать экспорт отчета в Excel, чтобы менеджеры сами выгружали нужный срез данных.",
+      "expected_tasks": [
+        {
+          "title": "Добавить фильтр по периоду в отчет по продажам",
+          "description": "Добавить фильтр по периоду в отчет по продажам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать экспорт отчета в Excel",
+          "description": "Сделать экспорт отчета в Excel",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_105",
+      "category": "long_clean",
+      "project_title": "Сервис доставки",
+      "input_text": "После последних изменений в корзине клиенты начали чаще жаловаться, что заказ либо не создается, либо время доставки отображается некорректно и отличается от того, что видит оператор. Надо починить создание заказа из корзины и исправить расчет времени доставки на этапе оформления заказа.",
+      "expected_tasks": [
+        {
+          "title": "Починить создание заказа из корзины",
+          "description": "Починить создание заказа из корзины",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить расчет времени доставки при оформлении заказа",
+          "description": "Исправить расчет времени доставки при оформлении заказа",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_106",
+      "category": "long_clean",
+      "project_title": "Система бронирования",
+      "input_text": "По обратной связи от клиентов видно, что форма бронирования работает неочевидно: номер телефона часто вводят с ошибками, а выбор даты и времени не помогает понять, какие интервалы реально свободны. Нужно сделать валидацию номера телефона в форме бронирования и подсветить свободные слоты в выборе времени.",
+      "expected_tasks": [
+        {
+          "title": "Сделать валидацию номера телефона в форме бронирования",
+          "description": "Сделать валидацию номера телефона в форме бронирования",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Подсветить свободные слоты в выборе времени",
+          "description": "Подсветить свободные слоты в выборе времени",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_107",
+      "category": "long_clean",
+      "project_title": "HR платформа",
+      "input_text": "Рекрутеры сообщили, что при большом потоке кандидатов им тяжело быстро просматривать релевантные отклики, потому что сортировка работает не по тем полям, а поиск не учитывает часть данных из карточки резюме. Нужно добавить сортировку кандидатов по дате отклика и сделать поиск кандидатов по имени и навыкам.",
+      "expected_tasks": [
+        {
+          "title": "Добавить сортировку кандидатов по дате отклика",
+          "description": "Добавить сортировку кандидатов по дате отклика",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать поиск кандидатов по имени и навыкам",
+          "description": "Сделать поиск кандидатов по имени и навыкам",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_108",
+      "category": "long_clean",
+      "project_title": "Финансовый дашборд",
+      "input_text": "На демо клиент заметил, что в виджете баланса суммы иногда округляются по-разному, а легенда графика не совпадает с цветами серий, из-за чего отчет выглядит ненадежно. Нужно исправить округление сумм в виджете баланса и поправить легенду графика, чтобы цвета и подписи соответствовали данным.",
+      "expected_tasks": [
+        {
+          "title": "Исправить округление сумм в виджете баланса",
+          "description": "Исправить округление сумм в виджете баланса",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить легенду графика",
+          "description": "Поправить легенду графика",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_109",
+      "category": "long_clean",
+      "project_title": "SaaS платформа",
+      "input_text": "Маркетинг хочет обновить публичную часть сайта перед запуском рекламы. Сейчас на сайте нет понятной страницы тарифов, а заявка на демо отправляется через общий email, что неудобно отслеживать. Нужно добавить страницу тарифов с таблицей сравнения планов и отдельную форму запроса демо с отправкой в CRM.",
+      "expected_tasks": [
+        {
+          "title": "Добавить страницу тарифов с таблицей сравнения планов",
+          "description": "Добавить страницу тарифов с таблицей сравнения планов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить форму запроса демо с отправкой в CRM",
+          "description": "Добавить форму запроса демо с отправкой в CRM",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_110",
+      "category": "long_clean",
+      "project_title": "Маркетплейс",
+      "input_text": "Продавцы жалуются, что при добавлении товара фотографии загружаются нестабильно: иногда не появляется предпросмотр, а иногда нельзя удалить лишний файл до сохранения карточки. Нужно починить загрузку изображений в форме добавления товара и исправить удаление выбранных картинок до публикации.",
+      "expected_tasks": [
+        {
+          "title": "Починить загрузку изображений в форме добавления товара",
+          "description": "Починить загрузку изображений в форме добавления товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить удаление выбранных картинок до публикации",
+          "description": "Исправить удаление выбранных картинок до публикации",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_111",
+      "category": "long_clean",
+      "project_title": "CRM для агентства",
+      "input_text": "Менеджерам по продажам не хватает прозрачности по тому, что происходило в сделке: комментарии разбросаны, а историю изменений приходится восстанавливать вручную по сообщениям. Нужно добавить комментарии к сделкам и вывести историю изменений по ключевым полям прямо в карточке сделки.",
+      "expected_tasks": [
+        {
+          "title": "Добавить комментарии к сделкам",
+          "description": "Добавить комментарии к сделкам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести историю изменений ключевых полей в карточке сделки",
+          "description": "Вывести историю изменений ключевых полей в карточке сделки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_112",
+      "category": "long_clean",
+      "project_title": "Медицинский кабинет",
+      "input_text": "Администраторы часто не уверены, сохранилась ли запись пациента, потому что интерфейс не показывает понятное подтверждение, а напоминания о приеме тоже не всегда заметны. Нужно сделать уведомление об успешном сохранении записи пациента и добавить напоминание о приеме за день до визита.",
+      "expected_tasks": [
+        {
+          "title": "Сделать уведомление об успешном сохранении записи пациента",
+          "description": "Сделать уведомление об успешном сохранении записи пациента",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить напоминание о приеме за день до визита",
+          "description": "Добавить напоминание о приеме за день до визита",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_113",
+      "category": "long_clean",
+      "project_title": "Образовательная платформа",
+      "input_text": "Студенты теряются в процессе обучения, потому что не видят общий прогресс по курсу и не понимают, когда курс считается полностью завершенным. Нужно добавить прогресс-бар прохождения курса в личный кабинет и бейдж завершения курса после выполнения всех обязательных шагов.",
+      "expected_tasks": [
+        {
+          "title": "Добавить прогресс-бар прохождения курса в личный кабинет",
+          "description": "Добавить прогресс-бар прохождения курса в личный кабинет",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить бейдж завершения курса",
+          "description": "Добавить бейдж завершения курса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_114",
+      "category": "long_clean",
+      "project_title": "Чат поддержки",
+      "input_text": "Операторы поддержки сообщают, что работать с файлами неудобно: часть вложений открывается с ошибкой, а изображения приходится скачивать даже для простого просмотра. Нужно исправить открытие вложений в окне переписки и сделать предпросмотр изображений без скачивания файла.",
+      "expected_tasks": [
+        {
+          "title": "Исправить открытие вложений в окне переписки",
+          "description": "Исправить открытие вложений в окне переписки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать предпросмотр изображений без скачивания файла",
+          "description": "Сделать предпросмотр изображений без скачивания файла",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_115",
+      "category": "long_clean",
+      "project_title": "Сервис подписок",
+      "input_text": "Пользователи не понимают, когда и за что у них списывались деньги, потому что в профиле нет истории операций, а статус платежа виден только в письме. Нужно добавить историю списаний в профиль пользователя и вывести текущий статус оплаты на странице подписки.",
+      "expected_tasks": [
+        {
+          "title": "Добавить историю списаний в профиль пользователя",
+          "description": "Добавить историю списаний в профиль пользователя",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести текущий статус оплаты на странице подписки",
+          "description": "Вывести текущий статус оплаты на странице подписки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_116",
+      "category": "long_clean",
+      "project_title": "Личный кабинет клиента",
+      "input_text": "Разработчики интеграций жалуются, что копирование API ключа работает непредсказуемо, а подпись рядом с полем не объясняет, где этот ключ использовать. Нужно сделать кнопку копирования API ключа и обновить текст подсказки рядом с полем ключа.",
+      "expected_tasks": [
+        {
+          "title": "Сделать кнопку копирования API ключа",
+          "description": "Сделать кнопку копирования API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Обновить текст подсказки рядом с полем API ключа",
+          "description": "Обновить текст подсказки рядом с полем API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_117",
+      "category": "long_clean",
+      "project_title": "Платформа вебинаров",
+      "input_text": "Маркетологи просят улучшить лендинг мероприятия: сейчас посетители не чувствуют срочности, потому что нет таймера до старта, и не понимают, когда именно начнется вебинар. Нужно добавить таймер до начала вебинара на лендинг и отдельно вывести дату и время старта в заметном блоке.",
+      "expected_tasks": [
+        {
+          "title": "Добавить таймер до начала вебинара на лендинг",
+          "description": "Добавить таймер до начала вебинара на лендинг",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести дату и время старта в заметном блоке",
+          "description": "Вывести дату и время старта в заметном блоке",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_118",
+      "category": "long_clean",
+      "project_title": "Складская система",
+      "input_text": "После возвратов товаров остатки на складе иногда пересчитываются неверно, а пользователи видят устаревшие значения до ручного обновления таблицы. Нужно исправить пересчет остатков после возврата товара и обновление таблицы склада сразу после операции.",
+      "expected_tasks": [
+        {
+          "title": "Исправить пересчет остатков после возврата товара",
+          "description": "Исправить пересчет остатков после возврата товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Обновлять таблицу склада сразу после операции возврата",
+          "description": "Обновлять таблицу склада сразу после операции возврата",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_119",
+      "category": "long_clean",
+      "project_title": "Платформа опросов",
+      "input_text": "Автору опроса сейчас сложно проверить, как форма будет выглядеть для респондента, а публикация происходит слишком резко без промежуточного шага проверки. Нужно добавить предпросмотр формы перед публикацией и отдельную кнопку публикации после просмотра результата.",
+      "expected_tasks": [
+        {
+          "title": "Добавить предпросмотр формы перед публикацией",
+          "description": "Добавить предпросмотр формы перед публикацией",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить отдельную кнопку публикации после предпросмотра",
+          "description": "Добавить отдельную кнопку публикации после предпросмотра",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_120",
+      "category": "long_clean",
+      "project_title": "Система логистики",
+      "input_text": "Логисты говорят, что текущая карта доставки мало помогает в реальной работе: часть маршрутов отображается некорректно, а маркеры на карте не всегда совпадают с фактическими точками. Нужно починить отображение маршрута на карте доставки и исправить маркеры точек доставки и склада.",
+      "expected_tasks": [
+        {
+          "title": "Починить отображение маршрута на карте доставки",
+          "description": "Починить отображение маршрута на карте доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить маркеры точек доставки и склада",
+          "description": "Исправить маркеры точек доставки и склада",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_121",
+      "category": "long_clean",
+      "project_title": "Бухгалтерский сервис",
+      "input_text": "Клиенты просят ускорить работу с документами: сейчас счет можно только смотреть на экране, но нельзя быстро выгрузить и распечатать для передачи в бумажном виде. Нужно добавить выгрузку счета в PDF и отдельную кнопку печати на странице счета.",
+      "expected_tasks": [
+        {
+          "title": "Добавить выгрузку счета в PDF",
+          "description": "Добавить выгрузку счета в PDF",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить кнопку печати на странице счета",
+          "description": "Добавить кнопку печати на странице счета",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_122",
+      "category": "long_clean",
+      "project_title": "CRM для застройщика",
+      "input_text": "Отдел продаж попросил улучшить работу с лидами: фильтр по менеджеру не помогает быстро выделять нужные сделки, а по названию жилого комплекса вообще нельзя искать. Нужно исправить фильтр лидов по менеджеру и добавить поиск лидов по названию ЖК.",
+      "expected_tasks": [
+        {
+          "title": "Исправить фильтр лидов по менеджеру",
+          "description": "Исправить фильтр лидов по менеджеру",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить поиск лидов по названию ЖК",
+          "description": "Добавить поиск лидов по названию ЖК",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_123",
+      "category": "long_clean",
+      "project_title": "Портал партнеров",
+      "input_text": "Партнеры не могут быстро разобраться в интеграции, потому что документация фрагментарная и в ней нет живых примеров. Нужно сделать страницу документации по интеграции API и добавить блок с примерами запросов и ответов для основных сценариев.",
+      "expected_tasks": [
+        {
+          "title": "Сделать страницу документации по интеграции API",
+          "description": "Сделать страницу документации по интеграции API",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить блок с примерами запросов и ответов API",
+          "description": "Добавить блок с примерами запросов и ответов API",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_124",
+      "category": "long_clean",
+      "project_title": "Сервис онлайн-записи",
+      "input_text": "В форме адреса пользователи часто тратят слишком много времени на заполнение, потому что город приходится вводить руками, а формат подсказок не помогает избежать ошибок. Нужно добавить автоподстановку города в форме адреса и вывести текстовые подсказки по заполнению адреса рядом с полем.",
+      "expected_tasks": [
+        {
+          "title": "Добавить автоподстановку города в форме адреса",
+          "description": "Добавить автоподстановку города в форме адреса",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести текстовые подсказки по заполнению адреса рядом с полем",
+          "description": "Вывести текстовые подсказки по заполнению адреса рядом с полем",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_clean_125",
+      "category": "long_clean",
+      "project_title": "Система обучения",
+      "input_text": "Пользователи жалуются, что после перезагрузки страницы часть прогресса в тестах теряется, а некоторые ответы не сохраняются вообще, особенно если тест проходит на мобильном устройстве. Нужно исправить сохранение ответов в тесте после перезагрузки страницы и сохранить прогресс прохождения теста между сессиями.",
+      "expected_tasks": [
+        {
+          "title": "Исправить сохранение ответов в тесте после перезагрузки страницы",
+          "description": "Исправить сохранение ответов в тесте после перезагрузки страницы",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сохранять прогресс прохождения теста между сессиями",
+          "description": "Сохранять прогресс прохождения теста между сессиями",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_126",
+      "category": "long_noisy",
+      "project_title": "CRM для клиники",
+      "input_text": "Коллеги, я сейчас напишу длинно, потому что все накопилось. Во-первых, вчера снова обсуждали, кто принесет кофе в офис, потом спорили, нужен ли новый чайник, потом кто-то отправил мем в чат и все отвлеклись. Но если возвращаться к проекту, то там реально боль: администраторы не могут нормально искать пациентов, а выгрузку делают вообще через какие-то костыли. Поэтому, пожалуйста, добавь поиск по пациентам по имени и номеру телефона, и еще сделай экспорт списка пациентов в Excel со страницы реестра. Все остальное про чай и мемы можно игнорировать.",
+      "expected_tasks": [
+        {
+          "title": "Добавить поиск по пациентам по имени и номеру телефона",
+          "description": "Добавить поиск по пациентам по имени и номеру телефона",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать экспорт списка пациентов в Excel со страницы реестра",
+          "description": "Сделать экспорт списка пациентов в Excel со страницы реестра",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_127",
+      "category": "long_noisy",
+      "project_title": "Интернет-магазин",
+      "input_text": "Блин, это снова тот случай, когда вроде бы говорим про продукт, а в середине созвона вдруг ушли обсуждать отпуск, потом кто-то начал ругаться на курьеров, потом еще обсуждали, где заказывать обед. Ладно, по делу: в карточке товара нужно исправить отображение цены со скидкой, потому что пользователи путаются, и еще рядом с блоком покупки нужно явно вывести стоимость доставки. Пожалуйста, не превращай это в заметку про обед и отпуск.",
+      "expected_tasks": [
+        {
+          "title": "Исправить отображение цены со скидкой в карточке товара",
+          "description": "Исправить отображение цены со скидкой в карточке товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Явно вывести стоимость доставки рядом с блоком покупки",
+          "description": "Явно вывести стоимость доставки рядом с блоком покупки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_128",
+      "category": "long_noisy",
+      "project_title": "Telegram mini app",
+      "input_text": "Пишу как есть: сегодня в чате был полный бардак, сначала все кидали смайлики, потом кто-то написал \"да сколько можно\", потом мы обсуждали, почему опять не заказали бумагу в офис. Но если вычленить главное по проекту, то в mini app нужен поиск по названию проекта и задачам, а также фильтр по статусу, потому что без него список превращается в кашу. Все бытовое и эмоциональное можно выкинуть.",
+      "expected_tasks": [
+        {
+          "title": "Добавить поиск по названию проекта и задачам",
+          "description": "Добавить поиск по названию проекта и задачам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить фильтр по статусу задач",
+          "description": "Добавить фильтр по статусу задач",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_129",
+      "category": "long_noisy",
+      "project_title": "Платформа аналитики",
+      "input_text": "Слушай, тут длинный фидбек от отдела продаж: сначала они жаловались на отчеты, потом зачем-то перескочили на разговор о том, кто поедет на конференцию, потом еще написали кучу смайлов и пару резких слов. Если очистить шум, то задача такая: нужно добавить фильтр по периоду в отчет по продажам и сделать экспорт отчета в Excel, чтобы они сами выгружали данные, а не дергали аналитика каждый раз.",
+      "expected_tasks": [
+        {
+          "title": "Добавить фильтр по периоду в отчет по продажам",
+          "description": "Добавить фильтр по периоду в отчет по продажам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать экспорт отчета в Excel",
+          "description": "Сделать экспорт отчета в Excel",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_130",
+      "category": "long_noisy",
+      "project_title": "Сервис доставки",
+      "input_text": "Ниже сумбурно, но по сути важно. Мы обсудили, что в офисе опять закончилась вода, кто-то просил купить салфетки, потом был монолог о том, что интерфейс корзины \"просто убивает\". Если отбросить все лишнее, надо починить создание заказа из корзины и исправить расчет времени доставки на этапе оформления. Остальное не относится к продукту.",
+      "expected_tasks": [
+        {
+          "title": "Починить создание заказа из корзины",
+          "description": "Починить создание заказа из корзины",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить расчет времени доставки на этапе оформления",
+          "description": "Исправить расчет времени доставки на этапе оформления",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_131",
+      "category": "long_noisy",
+      "project_title": "Система бронирования",
+      "input_text": "Сообщение большое, потому что собирал его из кусков переписки. Там было и про чайник, и про расписание отпусков, и про вечеринку отдела, и даже про то, что кто-то не закрыл окно в переговорке. Но по системе бронирования нужны две вещи: сделать валидацию номера телефона в форме бронирования и подсветить свободные слоты, чтобы пользователи сразу понимали, что доступно.",
+      "expected_tasks": [
+        {
+          "title": "Сделать валидацию номера телефона в форме бронирования",
+          "description": "Сделать валидацию номера телефона в форме бронирования",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Подсветить свободные слоты",
+          "description": "Подсветить свободные слоты",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_132",
+      "category": "long_noisy",
+      "project_title": "HR платформа",
+      "input_text": "В переписке рекрутеров сначала обсуждали собеседования, потом почему-то начали выбирать место для корпоратива, потом еще кто-то написал, что все работает \"через одно место\". Если привести это к нормальной постановке, то по платформе нужно добавить сортировку кандидатов по дате отклика и сделать поиск кандидатов по имени и навыкам. Все разговоры про корпоратив, еду и такси не относятся к задаче.",
+      "expected_tasks": [
+        {
+          "title": "Добавить сортировку кандидатов по дате отклика",
+          "description": "Добавить сортировку кандидатов по дате отклика",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать поиск кандидатов по имени и навыкам",
+          "description": "Сделать поиск кандидатов по имени и навыкам",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_133",
+      "category": "long_noisy",
+      "project_title": "Финансовый дашборд",
+      "input_text": "Я собрал это из заметок после демонстрации. Там сначала было много эмоций, потом кто-то возмутился, что на встречу не принесли кофе, потом минут пять обсуждали билеты в командировку. По дашборду нужен конкретный фикс: исправить округление сумм в виджете баланса и поправить легенду графика, чтобы цвета и подписи соответствовали сериям данных.",
+      "expected_tasks": [
+        {
+          "title": "Исправить округление сумм в виджете баланса",
+          "description": "Исправить округление сумм в виджете баланса",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Поправить легенду графика",
+          "description": "Поправить легенду графика",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_134",
+      "category": "long_noisy",
+      "project_title": "SaaS платформа",
+      "input_text": "Ниже почти стенограмма обсуждения, там и эмоции, и жалобы, и куча несвязанных комментариев типа \"где мой пропуск\", \"кто заказал пиццу\", \"опять все тормозит\". По продукту все же понятно: нужно добавить страницу тарифов с таблицей сравнения планов и сделать форму запроса демо с отправкой в CRM, чтобы лиды не терялись в почте.",
+      "expected_tasks": [
+        {
+          "title": "Добавить страницу тарифов с таблицей сравнения планов",
+          "description": "Добавить страницу тарифов с таблицей сравнения планов",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать форму запроса демо с отправкой в CRM",
+          "description": "Сделать форму запроса демо с отправкой в CRM",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_135",
+      "category": "long_noisy",
+      "project_title": "Маркетплейс",
+      "input_text": "Сообщение специально длинное: продавцы сначала ругались, что менеджер не ответил, потом жаловались на курьеров, потом писали про отпуск и смеялись над мемами. Но по форме товара все просто и больно: нужно починить загрузку изображений и исправить удаление выбранных картинок до публикации, потому что сейчас карточку невозможно нормально подготовить.",
+      "expected_tasks": [
+        {
+          "title": "Починить загрузку изображений в форме товара",
+          "description": "Починить загрузку изображений в форме товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить удаление выбранных картинок до публикации",
+          "description": "Исправить удаление выбранных картинок до публикации",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_136",
+      "category": "long_noisy",
+      "project_title": "CRM для агентства",
+      "input_text": "В отделе продаж был длинный поток сознания: сначала обсуждали кофе, потом кто-то спорил из-за отпуска, потом скинули пару голосовых, в которых половина текста не по делу. Если свести это к рабочему запросу, то нужно добавить комментарии к сделкам и вывести историю изменений по ключевым полям прямо в карточке сделки.",
+      "expected_tasks": [
+        {
+          "title": "Добавить комментарии к сделкам",
+          "description": "Добавить комментарии к сделкам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести историю изменений по ключевым полям в карточке сделки",
+          "description": "Вывести историю изменений по ключевым полям в карточке сделки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_137",
+      "category": "long_noisy",
+      "project_title": "Медицинский кабинет",
+      "input_text": "Длинное сообщение от администраторов: они писали про расписание врачей, потом неожиданно ушли в разговор про подарки коллегам, потом начались смайлики и фразы вроде \"ну это уже невозможно\". Если отфильтровать шум, нужны две задачи: сделать уведомление об успешном сохранении записи пациента и добавить напоминание о приеме за день до визита.",
+      "expected_tasks": [
+        {
+          "title": "Сделать уведомление об успешном сохранении записи пациента",
+          "description": "Сделать уведомление об успешном сохранении записи пациента",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить напоминание о приеме за день до визита",
+          "description": "Добавить напоминание о приеме за день до визита",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_138",
+      "category": "long_noisy",
+      "project_title": "Образовательная платформа",
+      "input_text": "Это собранный фидбек из нескольких источников: в одном сообщении был спор про дедлайны, в другом просьба купить маркеры для офиса, в третьем ругань на то, что \"опять ничего не понятно\". По платформе задачи такие: добавить прогресс-бар прохождения курса в личный кабинет и бейдж завершения курса после выполнения всех обязательных шагов.",
+      "expected_tasks": [
+        {
+          "title": "Добавить прогресс-бар прохождения курса в личный кабинет",
+          "description": "Добавить прогресс-бар прохождения курса в личный кабинет",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить бейдж завершения курса",
+          "description": "Добавить бейдж завершения курса",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_139",
+      "category": "long_noisy",
+      "project_title": "Чат поддержки",
+      "input_text": "Тут много лишнего, потому что это слепок из чата поддержки команды: кто-то писал про погоду, кто-то про билеты, кто-то опять жаловался на чай в офисе, плюс были смайлы и пара несвязных реплик. Но по продукту нужен конкретный набор задач: исправить открытие вложений в окне переписки и сделать предпросмотр изображений без скачивания файла.",
+      "expected_tasks": [
+        {
+          "title": "Исправить открытие вложений в окне переписки",
+          "description": "Исправить открытие вложений в окне переписки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать предпросмотр изображений без скачивания файла",
+          "description": "Сделать предпросмотр изображений без скачивания файла",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_140",
+      "category": "long_noisy",
+      "project_title": "Сервис подписок",
+      "input_text": "Ниже текст из общего чата, там длинный поток: обсуждали, кто возьмет дежурство, потом где заказать воду, потом несколько человек написали, что интерфейс оплаты выглядит странно. По сути надо добавить историю списаний в профиль пользователя и вывести текущий статус оплаты на странице подписки, чтобы люди понимали, что у них происходит с деньгами.",
+      "expected_tasks": [
+        {
+          "title": "Добавить историю списаний в профиль пользователя",
+          "description": "Добавить историю списаний в профиль пользователя",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести текущий статус оплаты на странице подписки",
+          "description": "Вывести текущий статус оплаты на странице подписки",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_141",
+      "category": "long_noisy",
+      "project_title": "Личный кабинет клиента",
+      "input_text": "Пишу сводку после кучи сообщений: сначала все обсуждали, почему в офисе холодно, потом начались шутки и жалобы, а потом уже вернулись к интеграциям. Реальная задача вот какая: нужно сделать кнопку копирования API ключа и обновить текст подсказки рядом с полем ключа, чтобы партнеры понимали, куда его вставлять и как использовать.",
+      "expected_tasks": [
+        {
+          "title": "Сделать кнопку копирования API ключа",
+          "description": "Сделать кнопку копирования API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Обновить текст подсказки рядом с полем API ключа",
+          "description": "Обновить текст подсказки рядом с полем API ключа",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_142",
+      "category": "long_noisy",
+      "project_title": "Платформа вебинаров",
+      "input_text": "В канале маркетинга сначала спорили о баннерах, потом обсуждали кофе-брейк, потом начались реплики про то, что лендинг \"вообще не продает\". Если из этого достать полезное, нужно добавить таймер до начала вебинара на лендинг и вывести дату и время старта в заметном блоке, чтобы посетители не пропускали начало.",
+      "expected_tasks": [
+        {
+          "title": "Добавить таймер до начала вебинара на лендинг",
+          "description": "Добавить таймер до начала вебинара на лендинг",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести дату и время старта в заметном блоке",
+          "description": "Вывести дату и время старта в заметном блоке",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_143",
+      "category": "long_noisy",
+      "project_title": "Складская система",
+      "input_text": "Собрал длинный фидбек: часть сообщений была про ремонт в офисе, часть про то, кто купит бумагу, а часть про то, что система склада ведет себя \"криво\". Если убрать все лишнее, нужно исправить пересчет остатков после возврата товара и обновление таблицы склада сразу после операции, чтобы пользователи не видели устаревшие данные.",
+      "expected_tasks": [
+        {
+          "title": "Исправить пересчет остатков после возврата товара",
+          "description": "Исправить пересчет остатков после возврата товара",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Обновлять таблицу склада сразу после операции возврата",
+          "description": "Обновлять таблицу склада сразу после операции возврата",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_144",
+      "category": "long_noisy",
+      "project_title": "Платформа опросов",
+      "input_text": "Сообщение длинное, потому что сюда попали и служебные заметки, и реплики про обед, и куча смайликов, и эмоциональные комментарии. Но сама продуктовая просьба простая: нужно добавить предпросмотр формы перед публикацией и отдельную кнопку публикации после этого шага, чтобы автор мог проверить результат до запуска опроса.",
+      "expected_tasks": [
+        {
+          "title": "Добавить предпросмотр формы перед публикацией",
+          "description": "Добавить предпросмотр формы перед публикацией",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить отдельную кнопку публикации после предпросмотра",
+          "description": "Добавить отдельную кнопку публикации после предпросмотра",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_145",
+      "category": "long_noisy",
+      "project_title": "Система логистики",
+      "input_text": "Ниже текст после большого обсуждения: сначала говорили про конференцию, потом про то, кто возьмет машину, потом про кофе, а уже потом вернулись к продукту. По делу у нас две задачи: починить отображение маршрута на карте доставки и исправить маркеры точек доставки и склада, потому что логисты не могут нормально ориентироваться.",
+      "expected_tasks": [
+        {
+          "title": "Починить отображение маршрута на карте доставки",
+          "description": "Починить отображение маршрута на карте доставки",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить маркеры точек доставки и склада",
+          "description": "Исправить маркеры точек доставки и склада",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_146",
+      "category": "long_noisy",
+      "project_title": "Бухгалтерский сервис",
+      "input_text": "Это смесь из чата поддержки и фидбека клиентов. Там было все подряд: от жалоб на интернет до обсуждения, кто когда в отпуске, плюс несколько фраз с эмоциями и смайликами. Если оставить только продуктовую часть, надо добавить выгрузку счета в PDF и кнопку печати на странице счета, потому что людям неудобно работать с документами только в браузере.",
+      "expected_tasks": [
+        {
+          "title": "Добавить выгрузку счета в PDF",
+          "description": "Добавить выгрузку счета в PDF",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить кнопку печати на странице счета",
+          "description": "Добавить кнопку печати на странице счета",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_147",
+      "category": "long_noisy",
+      "project_title": "CRM для застройщика",
+      "input_text": "Пишу сводку с созвона: сначала минут десять обсуждали документы по объектам, потом спорили, кто едет на встречу, потом начался хаос в чате. Но по CRM нужен понятный объем работ: исправить фильтр лидов по менеджеру и добавить поиск лидов по названию ЖК, чтобы отдел продаж не терялся в потоке обращений.",
+      "expected_tasks": [
+        {
+          "title": "Исправить фильтр лидов по менеджеру",
+          "description": "Исправить фильтр лидов по менеджеру",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить поиск лидов по названию ЖК",
+          "description": "Добавить поиск лидов по названию ЖК",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_148",
+      "category": "long_noisy",
+      "project_title": "Портал партнеров",
+      "input_text": "Длинный поток сообщений от партнерского отдела: часть была про поездку, часть про обед, часть про то, что кто-то не понял старую инструкцию и начал злиться. По сути нужно сделать страницу документации по интеграции API и добавить блок с примерами запросов и ответов, потому что без этого партнеры не могут быстро стартовать.",
+      "expected_tasks": [
+        {
+          "title": "Сделать страницу документации по интеграции API",
+          "description": "Сделать страницу документации по интеграции API",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить блок с примерами запросов и ответов API",
+          "description": "Добавить блок с примерами запросов и ответов API",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_149",
+      "category": "long_noisy",
+      "project_title": "Сервис онлайн-записи",
+      "input_text": "Тут много лишнего текста: сначала было обсуждение ремонтов, потом шутки про навигаторы, потом снова ругань на форму адреса. Если сократить до сути, то в форме нужно добавить автоподстановку города и вывести текстовые подсказки по заполнению адреса рядом с полем, чтобы пользователи меньше ошибались и быстрее проходили сценарий.",
+      "expected_tasks": [
+        {
+          "title": "Добавить автоподстановку города в форме адреса",
+          "description": "Добавить автоподстановку города в форме адреса",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Вывести текстовые подсказки по заполнению адреса рядом с полем",
+          "description": "Вывести текстовые подсказки по заполнению адреса рядом с полем",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "long_noisy_150",
+      "category": "long_noisy",
+      "project_title": "Система обучения",
+      "input_text": "Собрал это из нескольких больших сообщений: где-то обсуждали дедлайны, где-то организацию созвона, где-то вообще спорили про кофе и кто закажет печенье. Но по продукту все достаточно ясно: нужно исправить сохранение ответов в тесте после перезагрузки страницы и сохранять прогресс прохождения теста между сессиями, особенно для мобильных пользователей.",
+      "expected_tasks": [
+        {
+          "title": "Исправить сохранение ответов в тесте после перезагрузки страницы",
+          "description": "Исправить сохранение ответов в тесте после перезагрузки страницы",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сохранять прогресс прохождения теста между сессиями",
+          "description": "Сохранять прогресс прохождения теста между сессиями",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    }
+  ]
+}

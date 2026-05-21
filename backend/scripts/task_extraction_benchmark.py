@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--cases",
-        default=str(Path(__file__).with_name("task_extraction_benchmark_cases.sample.json")),
+        default=str(Path(__file__).with_name("task_extraction_benchmark_cases.100.json")),
         help="Path to benchmark JSON cases.",
     )
     parser.add_argument(
