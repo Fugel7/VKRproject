@@ -1,0 +1,148 @@
+{
+  "cases": [
+    {
+      "id": "clean_login_bug",
+      "category": "clean",
+      "project_title": "CRM для салона",
+      "input_text": "Сделай кнопку входа на странице авторизации и поправь ошибку в API логина.",
+      "expected_tasks": [
+        {
+          "title": "Сделать кнопку входа на странице авторизации",
+          "description": "Сделать кнопку входа на странице авторизации",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить ошибку в API логина",
+          "description": "Поправить ошибку в API логина",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "clean_single_ui_task",
+      "category": "clean",
+      "project_title": "Интернет-магазин",
+      "input_text": "Нужно добавить фильтр по цене на страницу каталога.",
+      "expected_tasks": [
+        {
+          "title": "Добавить фильтр по цене на страницу каталога",
+          "description": "Нужно добавить фильтр по цене на страницу каталога",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_profanity_checkout",
+      "category": "noise_profanity",
+      "project_title": "E-commerce платформа",
+      "input_text": "Блин, опять все сломалось, черт. Исправь форму оплаты и добавь валидацию телефона, остальное бесит.",
+      "expected_tasks": [
+        {
+          "title": "Исправить форму оплаты",
+          "description": "Исправь форму оплаты",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Добавить валидацию телефона",
+          "description": "Добавить валидацию телефона",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "noise_emoji_dashboard",
+      "category": "noise_emoji",
+      "project_title": "Панель аналитики",
+      "input_text": "Пожалуйста 🙏 обнови график продаж на дашборде 📊 и почини экспорт в Excel 😅",
+      "expected_tasks": [
+        {
+          "title": "Обновить график продаж на дашборде",
+          "description": "Обновить график продаж на дашборде",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Починить экспорт в Excel",
+          "description": "Починить экспорт в Excel",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_household",
+      "category": "mixed_context",
+      "project_title": "Telegram mini app",
+      "input_text": "Купи хлеб, поставь чайник и добавь поиск задач в mini app по названию проекта.",
+      "expected_tasks": [
+        {
+          "title": "Добавить поиск задач в mini app по названию проекта",
+          "description": "Добавить поиск задач в mini app по названию проекта",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "mixed_context_team_chat",
+      "category": "mixed_context",
+      "project_title": "Система управления проектами",
+      "input_text": "На созвоне обсудили отпуск, мемы и еще нужно сделать модалку создания спринта и таблицу истории изменений задач.",
+      "expected_tasks": [
+        {
+          "title": "Сделать модалку создания спринта",
+          "description": "Сделать модалку создания спринта",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Сделать таблицу истории изменений задач",
+          "description": "Сделать таблицу истории изменений задач",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    },
+    {
+      "id": "offtopic_household_only",
+      "category": "offtopic",
+      "project_title": "CRM для клиники",
+      "input_text": "Купи молоко, вынеси мусор и закажи кофе.",
+      "expected_tasks": []
+    },
+    {
+      "id": "offtopic_abstract_chat",
+      "category": "offtopic",
+      "project_title": "SaaS платформа",
+      "input_text": "Как настроение, кто идет на обед и что будем смотреть вечером?",
+      "expected_tasks": []
+    },
+    {
+      "id": "audio_example_placeholder",
+      "category": "audio_noise",
+      "project_title": "Telegram mini app",
+      "context_text": "Голосовое сообщение от клиента по проекту.",
+      "audio_path": "audio/example-voice.ogg",
+      "expected_transcript": "Нужно добавить поиск по задачам и исправить создание спринта.",
+      "expected_tasks": [
+        {
+          "title": "Добавить поиск по задачам",
+          "description": "Добавить поиск по задачам",
+          "execution_hours": null,
+          "status": "NEW"
+        },
+        {
+          "title": "Исправить создание спринта",
+          "description": "Исправить создание спринта",
+          "execution_hours": null,
+          "status": "NEW"
+        }
+      ]
+    }
+  ]
+}
