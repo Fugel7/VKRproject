@@ -503,6 +503,29 @@ def execute_pipeline(
     return result
 
 
+def print_case_progress(
+    pipeline: str,
+    index: int,
+    total: int,
+    case: dict[str, Any],
+    result: dict[str, Any],
+) -> None:
+    status = result["status"]
+    latency = result["latency_sec"]
+    category = case["category"]
+    case_id = case["id"]
+    if status == "ok":
+        metrics = result.get("task_metrics") or {}
+        extra = f"f1={metrics.get('f1')} strict={metrics.get('strict_match')}"
+    else:
+        extra = result.get("error")
+    print(
+        f"[{pipeline}] {index}/{total} case={case_id} category={category} "
+        f"status={status} latency={latency}s {extra}",
+        flush=True,
+    )
+
+
 def print_summary(report: dict[str, Any]) -> None:
     print("=" * 88)
     print("Task Extraction Benchmark")
@@ -559,15 +582,22 @@ def main() -> int:
         "summary": {},
     }
     for pipeline in pipelines:
-        for case in cases:
-            report["results"][pipeline].append(
-                execute_pipeline(
-                    pipeline=pipeline,
-                    case=case,
-                    cases_path=cases_path,
-                    title_threshold=args.title_threshold,
-                    skip_missing_audio=not args.fail_missing_audio,
-                )
+        print(f"Starting pipeline: {pipeline} ({len(cases)} cases)", flush=True)
+        for index, case in enumerate(cases, start=1):
+            result = execute_pipeline(
+                pipeline=pipeline,
+                case=case,
+                cases_path=cases_path,
+                title_threshold=args.title_threshold,
+                skip_missing_audio=not args.fail_missing_audio,
+            )
+            report["results"][pipeline].append(result)
+            print_case_progress(
+                pipeline=pipeline,
+                index=index,
+                total=len(cases),
+                case=case,
+                result=result,
             )
         report["summary"][pipeline] = summarize_pipeline(report["results"][pipeline])
 
