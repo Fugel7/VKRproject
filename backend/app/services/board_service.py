@@ -1,5 +1,6 @@
 ﻿import json
 
+import asyncio
 from fastapi import HTTPException
 from psycopg import connect
 from psycopg.errors import Error as PsycopgError
@@ -18,6 +19,19 @@ from app.db_helpers import (
 from app.project_service import ensure_project_member, get_user_id_by_tg_id
 from app.schemas import BotIngestMessageRequest, CommentCreateRequest, SprintCreateRequest, SprintUpdateRequest, TaskCreateRequest, TaskUpdateRequest
 from app.services.chat_project_service import ensure_chat_project
+from app.services.realtime_service import project_event_bus
+
+
+def publish_project_event(project_id: int, event_type: str, payload: dict | None = None) -> None:
+    event = {"type": event_type, "project_id": project_id}
+    if payload:
+        event.update(payload)
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(project_event_bus.publish(project_id, event))
+        return
+    loop.create_task(project_event_bus.publish(project_id, event))
 
 
 def list_project_tasks(project_id: int, tg_id: int) -> list[dict]:
@@ -117,6 +131,7 @@ def create_project_sprint(project_id: int, payload: SprintCreateRequest) -> dict
                 )
                 sprint = cur.fetchone()
             conn.commit()
+            publish_project_event(project_id, "sprint_created", {"sprint_id": sprint["id"]})
             return sprint
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -160,6 +175,7 @@ def update_sprint(sprint_id: int, payload: SprintUpdateRequest) -> dict:
                 )
                 updated = cur.fetchone()
             conn.commit()
+            publish_project_event(updated["project_id"], "sprint_updated", {"sprint_id": updated["id"]})
             return updated
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -183,6 +199,7 @@ def delete_sprint(sprint_id: int, tg_id: int) -> dict:
                 cur.execute("DELETE FROM sprints WHERE id = %s RETURNING id;", (sprint_id,))
                 deleted = cur.fetchone()
             conn.commit()
+            publish_project_event(sprint_row["project_id"], "sprint_deleted", {"sprint_id": sprint_id})
             return deleted or {"id": sprint_id}
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -250,6 +267,7 @@ def create_project_task(project_id: int, payload: TaskCreateRequest) -> dict:
                     },
                 )
             conn.commit()
+            publish_project_event(project_id, "task_created", {"task_id": task["id"]})
             return task
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -430,6 +448,7 @@ def update_task(task_id: int, payload: TaskUpdateRequest) -> dict:
                     if version_row:
                         updated["version"] = version_row["version"]
             conn.commit()
+            publish_project_event(project_id, "task_updated", {"task_id": task_id})
             return updated
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -453,6 +472,7 @@ def delete_task(task_id: int, tg_id: int) -> dict:
                 cur.execute("DELETE FROM tasks WHERE id = %s RETURNING id;", (task_id,))
                 deleted = cur.fetchone()
             conn.commit()
+            publish_project_event(task_row["project_id"], "task_deleted", {"task_id": task_id})
             return deleted or {"id": task_id}
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -576,6 +596,7 @@ def create_task_comment(task_id: int, payload: CommentCreateRequest) -> dict:
                 )
                 comment = cur.fetchone()
             conn.commit()
+            publish_project_event(task_row["project_id"], "comment_created", {"task_id": task_id, "comment_id": comment["id"]})
             return comment
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))

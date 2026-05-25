@@ -2,6 +2,8 @@
 
 import { getApiBase, toTimeMs } from '../utils/api';
 
+const BOARD_REFRESH_INTERVAL_MS = 5000;
+
 export function useBoard({ selectedProject, tgId }) {
   const [tasks, setTasks] = useState([]);
   const [sprints, setSprints] = useState([]);
@@ -80,9 +82,12 @@ export function useBoard({ selectedProject, tgId }) {
     }
   }, [taskReadMap, selectedProject?.id, tgId]);
 
-  const loadBoard = useCallback(async (projectId, userTgId) => {
+  const loadBoard = useCallback(async (projectId, userTgId, options = {}) => {
+    const { silent = false } = options;
     const apiBase = getApiBase();
-    setBoardLoading(true);
+    if (!silent) {
+      setBoardLoading(true);
+    }
     setBoardError(null);
     try {
       const [tasksRes, sprintsRes] = await Promise.all([
@@ -109,13 +114,53 @@ export function useBoard({ selectedProject, tgId }) {
       setTasks([]);
       setSprints([]);
     } finally {
-      setBoardLoading(false);
+      if (!silent) {
+        setBoardLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     if (!selectedProject?.id || !tgId) return;
     loadBoard(selectedProject.id, tgId);
+  }, [selectedProject?.id, tgId, loadBoard]);
+
+  useEffect(() => {
+    if (!selectedProject?.id || !tgId || typeof window.EventSource === 'undefined') return undefined;
+
+    const apiBase = getApiBase();
+    const eventsUrl = `${apiBase}/projects/${selectedProject.id}/events?tg_id=${encodeURIComponent(tgId)}`;
+    const eventSource = new window.EventSource(eventsUrl);
+
+    const handleBoardUpdate = () => {
+      void loadBoard(selectedProject.id, tgId, { silent: true });
+    };
+
+    eventSource.addEventListener('board_update', handleBoardUpdate);
+
+    return () => {
+      eventSource.removeEventListener('board_update', handleBoardUpdate);
+      eventSource.close();
+    };
+  }, [selectedProject?.id, tgId, loadBoard]);
+
+  useEffect(() => {
+    if (!selectedProject?.id || !tgId) return undefined;
+
+    const refreshBoard = () => {
+      if (document.visibilityState === 'hidden') return;
+      void loadBoard(selectedProject.id, tgId, { silent: true });
+    };
+
+    const intervalId = window.setInterval(refreshBoard, BOARD_REFRESH_INTERVAL_MS);
+    window.addEventListener('focus', refreshBoard);
+    document.addEventListener('visibilitychange', refreshBoard);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshBoard);
+      document.removeEventListener('visibilitychange', refreshBoard);
+    };
   }, [selectedProject?.id, tgId, loadBoard]);
 
   const updateTask = useCallback(async (taskId, fields) => {
