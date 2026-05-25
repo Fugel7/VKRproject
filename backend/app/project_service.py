@@ -11,7 +11,9 @@ def get_user_id_by_tg_id(cur, tg_id: int) -> int:
     user_row = cur.fetchone()
     if not user_row:
         raise HTTPException(status_code=404, detail="User not found")
-    return user_row["id"]
+    if isinstance(user_row, dict):
+        return user_row["id"]
+    return user_row[0]
 
 
 def ensure_project_member(cur, project_id: int, user_id: int) -> None:

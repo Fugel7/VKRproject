@@ -3,6 +3,7 @@ import asyncio
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from psycopg import connect
+from psycopg.rows import dict_row
 
 from app.db import get_database_url
 from app.project_service import ensure_project_member, get_user_id_by_tg_id
@@ -15,7 +16,7 @@ SSE_HEARTBEAT_INTERVAL_SECONDS = 15
 
 def _assert_project_access(project_id: int, tg_id: int) -> None:
     with connect(get_database_url()) as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             user_id = get_user_id_by_tg_id(cur, tg_id)
             ensure_project_member(cur, project_id, user_id)
 
